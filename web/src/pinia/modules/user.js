@@ -33,7 +33,7 @@ export const useUserStore = defineStore('user', () => {
         }
       })
     }
-    console.log(appStore.config)
+    // console.log(appStore.config)
   }
 
   const setToken = (val) => {

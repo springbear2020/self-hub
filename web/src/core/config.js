@@ -7,7 +7,21 @@ const config = {
   appName: '一隅',
   appLogo: 'logo.png',
   showViteLogo: true,
-  logs: []
+  logs: [],
+  miser: {
+    income: {
+      color: '#4d70ff',
+      colorTo: '#6d8dff'
+    },
+    expense: {
+      color: '#f56c6c',
+      colorTo: '#f88d8d'
+    },
+    balance: {
+      color: '#67c23a',
+      colorTo: '#85d85a'
+    }
+  }
 }
 
 export const viteLogo = (env) => {
