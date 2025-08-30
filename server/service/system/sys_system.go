@@ -1,10 +1,10 @@
 package system
 
 import (
-	"github.com/flipped-aurora/gin-vue-admin/server/config"
-	"github.com/flipped-aurora/gin-vue-admin/server/global"
-	"github.com/flipped-aurora/gin-vue-admin/server/model/system"
-	"github.com/flipped-aurora/gin-vue-admin/server/utils"
+	"github.com/springbear2020/self-hub/server/config"
+	"github.com/springbear2020/self-hub/server/global"
+	"github.com/springbear2020/self-hub/server/model/system"
+	"github.com/springbear2020/self-hub/server/utils"
 	"go.uber.org/zap"
 )
 

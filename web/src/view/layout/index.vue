@@ -41,7 +41,9 @@
               </transition>
             </div>
           </router-view>
+          <!--
           <BottomInfo />
+          -->
         </div>
       </div>
     </div>
@@ -62,6 +64,7 @@
   import { useAppStore } from '@/pinia'
   import { storeToRefs } from 'pinia'
   import '@/style/transition.scss'
+
   const appStore = useAppStore()
   const { config, isDark, device } = storeToRefs(appStore)
 

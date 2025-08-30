@@ -2,7 +2,7 @@ package request
 
 import (
 	"fmt"
-	"github.com/flipped-aurora/gin-vue-admin/server/config"
+	"github.com/springbear2020/self-hub/server/config"
 	"os"
 )
 

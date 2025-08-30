@@ -2,15 +2,15 @@ package system
 
 import (
 	"fmt"
-	"github.com/flipped-aurora/gin-vue-admin/server/model/common"
 	"github.com/goccy/go-json"
+	"github.com/springbear2020/self-hub/server/model/common"
 	"io"
 	"strings"
 
-	"github.com/flipped-aurora/gin-vue-admin/server/global"
-	"github.com/flipped-aurora/gin-vue-admin/server/model/common/response"
-	"github.com/flipped-aurora/gin-vue-admin/server/utils/request"
 	"github.com/gin-gonic/gin"
+	"github.com/springbear2020/self-hub/server/global"
+	"github.com/springbear2020/self-hub/server/model/common/response"
+	"github.com/springbear2020/self-hub/server/utils/request"
 	"go.uber.org/zap"
 )
 

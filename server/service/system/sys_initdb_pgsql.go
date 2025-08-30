@@ -6,14 +6,14 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/flipped-aurora/gin-vue-admin/server/config"
 	"github.com/gookit/color"
+	"github.com/springbear2020/self-hub/server/config"
 
-	"github.com/flipped-aurora/gin-vue-admin/server/utils"
+	"github.com/springbear2020/self-hub/server/utils"
 
-	"github.com/flipped-aurora/gin-vue-admin/server/global"
-	"github.com/flipped-aurora/gin-vue-admin/server/model/system/request"
 	"github.com/google/uuid"
+	"github.com/springbear2020/self-hub/server/global"
+	"github.com/springbear2020/self-hub/server/model/system/request"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )

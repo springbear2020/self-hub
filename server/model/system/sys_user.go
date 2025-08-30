@@ -1,9 +1,9 @@
 package system
 
 import (
-	"github.com/flipped-aurora/gin-vue-admin/server/global"
-	"github.com/flipped-aurora/gin-vue-admin/server/model/common"
 	"github.com/google/uuid"
+	"github.com/springbear2020/self-hub/server/global"
+	"github.com/springbear2020/self-hub/server/model/common"
 )
 
 type Login interface {

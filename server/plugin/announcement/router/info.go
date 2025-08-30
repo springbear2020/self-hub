@@ -1,8 +1,8 @@
 package router
 
 import (
-	"github.com/flipped-aurora/gin-vue-admin/server/middleware"
 	"github.com/gin-gonic/gin"
+	"github.com/springbear2020/self-hub/server/middleware"
 )
 
 var Info = new(info)

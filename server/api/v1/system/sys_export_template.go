@@ -7,14 +7,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/flipped-aurora/gin-vue-admin/server/global"
-	"github.com/flipped-aurora/gin-vue-admin/server/model/common/request"
-	"github.com/flipped-aurora/gin-vue-admin/server/model/common/response"
-	"github.com/flipped-aurora/gin-vue-admin/server/model/system"
-	systemReq "github.com/flipped-aurora/gin-vue-admin/server/model/system/request"
-	"github.com/flipped-aurora/gin-vue-admin/server/service"
-	"github.com/flipped-aurora/gin-vue-admin/server/utils"
 	"github.com/gin-gonic/gin"
+	"github.com/springbear2020/self-hub/server/global"
+	"github.com/springbear2020/self-hub/server/model/common/request"
+	"github.com/springbear2020/self-hub/server/model/common/response"
+	"github.com/springbear2020/self-hub/server/model/system"
+	systemReq "github.com/springbear2020/self-hub/server/model/system/request"
+	"github.com/springbear2020/self-hub/server/service"
+	"github.com/springbear2020/self-hub/server/utils"
 	"go.uber.org/zap"
 )
 

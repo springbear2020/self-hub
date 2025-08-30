@@ -1,11 +1,11 @@
 package example
 
 import (
-	"github.com/flipped-aurora/gin-vue-admin/server/global"
-	common "github.com/flipped-aurora/gin-vue-admin/server/model/common/request"
-	"github.com/flipped-aurora/gin-vue-admin/server/model/common/response"
-	"github.com/flipped-aurora/gin-vue-admin/server/model/example"
 	"github.com/gin-gonic/gin"
+	"github.com/springbear2020/self-hub/server/global"
+	common "github.com/springbear2020/self-hub/server/model/common/request"
+	"github.com/springbear2020/self-hub/server/model/common/response"
+	"github.com/springbear2020/self-hub/server/model/example"
 	"go.uber.org/zap"
 )
 

@@ -3,7 +3,7 @@ package system
 import (
 	"context"
 	"encoding/json"
-	"github.com/flipped-aurora/gin-vue-admin/server/model/system/request"
+	"github.com/springbear2020/self-hub/server/model/system/request"
 	"reflect"
 	"testing"
 )

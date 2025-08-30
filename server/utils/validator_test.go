@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"github.com/flipped-aurora/gin-vue-admin/server/model/common/request"
+	"github.com/springbear2020/self-hub/server/model/common/request"
 	"testing"
 )
 

@@ -3,9 +3,9 @@ package request
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/flipped-aurora/gin-vue-admin/server/global"
-	model "github.com/flipped-aurora/gin-vue-admin/server/model/system"
 	"github.com/pkg/errors"
+	"github.com/springbear2020/self-hub/server/global"
+	model "github.com/springbear2020/self-hub/server/model/system"
 	"go/token"
 	"strings"
 )

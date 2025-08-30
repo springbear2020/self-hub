@@ -2,7 +2,7 @@
 package system
 
 import (
-	"github.com/flipped-aurora/gin-vue-admin/server/global"
+	"github.com/springbear2020/self-hub/server/global"
 )
 
 // 导出模板 结构体  SysExportTemplate

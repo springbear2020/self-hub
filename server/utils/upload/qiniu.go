@@ -7,9 +7,9 @@ import (
 	"mime/multipart"
 	"time"
 
-	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
 	"github.com/qiniu/go-sdk/v7/storage"
+	"github.com/springbear2020/self-hub/server/global"
 	"go.uber.org/zap"
 )
 

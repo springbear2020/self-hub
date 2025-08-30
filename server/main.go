@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/flipped-aurora/gin-vue-admin/server/core"
-	"github.com/flipped-aurora/gin-vue-admin/server/global"
-	"github.com/flipped-aurora/gin-vue-admin/server/initialize"
+	"github.com/springbear2020/self-hub/server/core"
+	"github.com/springbear2020/self-hub/server/global"
+	"github.com/springbear2020/self-hub/server/initialize"
 	_ "go.uber.org/automaxprocs"
 	"go.uber.org/zap"
 )
@@ -46,6 +46,6 @@ func initializeSystem() {
 	initialize.DBList()
 	initialize.SetupHandlers() // 注册全局函数
 	if global.GVA_DB != nil {
-		initialize.RegisterTables() // 初始化表
+		// initialize.RegisterTables() // 初始化表
 	}
 }

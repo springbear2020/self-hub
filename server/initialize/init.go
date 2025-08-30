@@ -3,7 +3,7 @@
 package initialize
 
 import (
-	"github.com/flipped-aurora/gin-vue-admin/server/utils"
+	"github.com/springbear2020/self-hub/server/utils"
 )
 
 // 初始化全局函数

@@ -10,9 +10,9 @@ package initialize
  */
 
 import (
-	"github.com/flipped-aurora/gin-vue-admin/server/config"
-	"github.com/flipped-aurora/gin-vue-admin/server/global"
-	"github.com/flipped-aurora/gin-vue-admin/server/initialize/internal"
+	"github.com/springbear2020/self-hub/server/config"
+	"github.com/springbear2020/self-hub/server/global"
+	"github.com/springbear2020/self-hub/server/initialize/internal"
 	"gorm.io/driver/sqlserver"
 	"gorm.io/gorm"
 )

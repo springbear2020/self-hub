@@ -2,9 +2,9 @@ package example
 
 import (
 	"context"
-	"github.com/flipped-aurora/gin-vue-admin/server/model/example"
-	"github.com/flipped-aurora/gin-vue-admin/server/service/system"
 	"github.com/pkg/errors"
+	"github.com/springbear2020/self-hub/server/model/example"
+	"github.com/springbear2020/self-hub/server/service/system"
 	"gorm.io/gorm"
 )
 

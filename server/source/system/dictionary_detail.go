@@ -3,9 +3,9 @@ package system
 import (
 	"context"
 	"fmt"
-	sysModel "github.com/flipped-aurora/gin-vue-admin/server/model/system"
-	"github.com/flipped-aurora/gin-vue-admin/server/service/system"
 	"github.com/pkg/errors"
+	sysModel "github.com/springbear2020/self-hub/server/model/system"
+	"github.com/springbear2020/self-hub/server/service/system"
 	"gorm.io/gorm"
 )
 

@@ -1,8 +1,8 @@
 package ast
 
 import (
-	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/pkg/errors"
+	"github.com/springbear2020/self-hub/server/global"
 	"go/ast"
 	"go/format"
 	"go/parser"

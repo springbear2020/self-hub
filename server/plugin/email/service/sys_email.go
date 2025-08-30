@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/flipped-aurora/gin-vue-admin/server/plugin/email/utils"
+	"github.com/springbear2020/self-hub/server/plugin/email/utils"
 )
 
 type EmailService struct{}

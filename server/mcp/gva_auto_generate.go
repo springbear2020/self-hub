@@ -10,13 +10,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/flipped-aurora/gin-vue-admin/server/global"
-	common "github.com/flipped-aurora/gin-vue-admin/server/model/common/request"
-	model "github.com/flipped-aurora/gin-vue-admin/server/model/system"
-	"github.com/flipped-aurora/gin-vue-admin/server/model/system/request"
-	"github.com/flipped-aurora/gin-vue-admin/server/service"
-	systemService "github.com/flipped-aurora/gin-vue-admin/server/service/system"
 	"github.com/mark3labs/mcp-go/mcp"
+	"github.com/springbear2020/self-hub/server/global"
+	common "github.com/springbear2020/self-hub/server/model/common/request"
+	model "github.com/springbear2020/self-hub/server/model/system"
+	"github.com/springbear2020/self-hub/server/model/system/request"
+	"github.com/springbear2020/self-hub/server/service"
+	systemService "github.com/springbear2020/self-hub/server/service/system"
 	"gorm.io/gorm"
 )
 

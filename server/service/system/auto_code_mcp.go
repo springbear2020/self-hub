@@ -2,10 +2,10 @@ package system
 
 import (
 	"context"
-	"github.com/flipped-aurora/gin-vue-admin/server/global"
-	"github.com/flipped-aurora/gin-vue-admin/server/model/system/request"
-	"github.com/flipped-aurora/gin-vue-admin/server/utils"
-	"github.com/flipped-aurora/gin-vue-admin/server/utils/autocode"
+	"github.com/springbear2020/self-hub/server/global"
+	"github.com/springbear2020/self-hub/server/model/system/request"
+	"github.com/springbear2020/self-hub/server/utils"
+	"github.com/springbear2020/self-hub/server/utils/autocode"
 	"os"
 	"path/filepath"
 	"text/template"

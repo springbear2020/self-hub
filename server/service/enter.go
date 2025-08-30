@@ -1,8 +1,8 @@
 package service
 
 import (
-	"github.com/flipped-aurora/gin-vue-admin/server/service/example"
-	"github.com/flipped-aurora/gin-vue-admin/server/service/system"
+	"github.com/springbear2020/self-hub/server/service/example"
+	"github.com/springbear2020/self-hub/server/service/system"
 )
 
 var ServiceGroupApp = new(ServiceGroup)

@@ -6,7 +6,7 @@ import (
 	"net/smtp"
 	"strings"
 
-	"github.com/flipped-aurora/gin-vue-admin/server/plugin/email/global"
+	"github.com/springbear2020/self-hub/server/plugin/email/global"
 
 	"github.com/jordan-wright/email"
 )

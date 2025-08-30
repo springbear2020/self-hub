@@ -81,7 +81,7 @@ defineOptions({
 const props = defineProps({
   modelValue: {
     type: String,
-    default: '#3b82f6'
+    default: '#00ccc6'
   }
 })
 
@@ -90,7 +90,7 @@ const emit = defineEmits(['update:modelValue'])
 const customColor = ref(props.modelValue)
 
 const presetColors = [
-  { color: '#4E80EE', name: '默认' },
+  { color: '#00ccc6', name: '默认' },
   { color: '#8bb5d1', name: '晨雾蓝' },
   { color: '#a8c8a8', name: '薄荷绿' },
   { color: '#d4a5a5', name: '玫瑰粉' },

@@ -1,9 +1,9 @@
 package email
 
 import (
-	"github.com/flipped-aurora/gin-vue-admin/server/plugin/email/global"
-	"github.com/flipped-aurora/gin-vue-admin/server/plugin/email/router"
 	"github.com/gin-gonic/gin"
+	"github.com/springbear2020/self-hub/server/plugin/email/global"
+	"github.com/springbear2020/self-hub/server/plugin/email/router"
 )
 
 type emailPlugin struct{}

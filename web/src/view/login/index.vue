@@ -1,125 +1,104 @@
 <template>
-  <div id="userLayout" class="w-full h-full relative">
-    <div
-      class="rounded-lg flex items-center justify-evenly w-full h-full md:w-screen md:h-screen md:bg-[#194bfb] bg-white"
-    >
-      <div class="md:w-3/5 w-10/12 h-full flex items-center justify-evenly">
-        <div
-          class="oblique h-[130%] w-3/5 bg-white dark:bg-slate-900 transform -rotate-12 absolute -ml-52"
-        />
-        <!-- 分割斜块 -->
-        <div
-          class="z-[999] pt-12 pb-10 md:w-96 w-full rounded-lg flex flex-col justify-between box-border"
-        >
-          <div>
-            <div class="flex items-center justify-center">
-              <img class="w-24" :src="$GIN_VUE_ADMIN.appLogo" alt />
-            </div>
-            <div class="mb-9">
-              <p class="text-center text-4xl font-bold">
-                {{ $GIN_VUE_ADMIN.appName }}
-              </p>
-              <p class="text-center text-sm font-normal text-gray-500 mt-2.5">
-                A management platform using Golang and Vue
-              </p>
-            </div>
-            <el-form
-              ref="loginForm"
-              :model="loginFormData"
-              :rules="rules"
-              :validate-on-rule-change="false"
-              @keyup.enter="submitForm"
-            >
-              <el-form-item prop="username" class="mb-6">
-                <el-input
-                  v-model="loginFormData.username"
-                  size="large"
-                  placeholder="请输入用户名"
-                  suffix-icon="user"
-                />
-              </el-form-item>
-              <el-form-item prop="password" class="mb-6">
-                <el-input
-                  v-model="loginFormData.password"
-                  show-password
-                  size="large"
-                  type="password"
-                  placeholder="请输入密码"
-                />
-              </el-form-item>
-              <el-form-item
-                v-if="loginFormData.openCaptcha"
-                prop="captcha"
-                class="mb-6"
-              >
-                <div class="flex w-full justify-between">
-                  <el-input
-                    v-model="loginFormData.captcha"
-                    placeholder="请输入验证码"
-                    size="large"
-                    class="flex-1 mr-5"
-                  />
-                  <div class="w-1/3 h-11 bg-[#c3d4f2] rounded">
-                    <img
-                      v-if="picPath"
-                      class="w-full h-full"
-                      :src="picPath"
-                      alt="请输入验证码"
-                      @click="loginVerify()"
-                    />
-                  </div>
-                </div>
-              </el-form-item>
-              <el-form-item class="mb-6">
-                <el-button
-                  class="shadow shadow-active h-11 w-full"
-                  type="primary"
-                  size="large"
-                  @click="submitForm"
-                  >登 录</el-button
-                >
-              </el-form-item>
-              <el-form-item class="mb-6">
-                <el-button
-                  class="shadow shadow-active h-11 w-full"
-                  type="primary"
-                  size="large"
-                  @click="checkInit"
-                  >前往初始化</el-button
-                >
-              </el-form-item>
-            </el-form>
-          </div>
-        </div>
-      </div>
-      <div class="hidden md:block w-1/2 h-full float-right bg-[#194bfb]">
-        <img
-          class="h-full"
-          src="@/assets/login_right_banner.jpg"
-          alt="banner"
-        />
-      </div>
+  <div id="userLayout" class="user-layout">
+    <div class="bg-shapes">
+      <div class="shape shape-1"></div>
+      <div class="shape shape-2"></div>
+      <div class="shape shape-3"></div>
     </div>
 
-    <BottomInfo class="left-0 right-0 absolute bottom-3 mx-auto w-full z-20">
-      <div class="links items-center justify-center gap-2 hidden md:flex">
+    <div class="login-container">
+      <div class="logo-area">
+        <img class="logo-img" :src="$GIN_VUE_ADMIN.appLogo" alt="Logo" />
+        <h1 class="app-name">{{ $GIN_VUE_ADMIN.appName }}</h1>
+        <p class="app-desc">SelfHub - 安放您数字生活的私密一隅</p>
+      </div>
+
+      <el-form
+        ref="loginForm"
+        :model="loginFormData"
+        :rules="rules"
+        :validate-on-rule-change="false"
+        @keyup.enter="submitForm"
+        class="login-form"
+      >
+        <el-form-item prop="username" class="form-item">
+          <el-input
+            v-model="loginFormData.username"
+            size="large"
+            placeholder="请输入用户名"
+            suffix-icon="user"
+          />
+        </el-form-item>
+
+        <el-form-item prop="password" class="form-item">
+          <el-input
+            v-model="loginFormData.password"
+            show-password
+            size="large"
+            type="password"
+            placeholder="请输入密码"
+          />
+        </el-form-item>
+
+        <el-form-item
+          v-if="loginFormData.openCaptcha"
+          prop="captcha"
+          class="form-item"
+        >
+          <div class="captcha-container">
+            <el-input
+              v-model="loginFormData.captcha"
+              placeholder="请输入验证码"
+              size="large"
+              class="captcha-input"
+            />
+            <div class="captcha-image" @click="loginVerify()">
+              <img
+                v-if="picPath"
+                :src="picPath"
+                alt="请输入验证码"
+              />
+            </div>
+          </div>
+        </el-form-item>
+
+        <el-form-item class="form-item">
+          <el-button
+            class="login-btn"
+            type="primary"
+            size="large"
+            @click="submitForm"
+          >登 录
+          </el-button
+          >
+        </el-form-item>
+      </el-form>
+
+      <!--
+      <div class="bottom-links">
         <a href="https://www.gin-vue-admin.com/" target="_blank">
-          <img src="@/assets/docs.png" class="w-8 h-8" alt="文档" />
+          <img src="@/assets/docs.png" alt="文档" />
         </a>
         <a href="https://support.qq.com/product/371961" target="_blank">
-          <img src="@/assets/kefu.png" class="w-8 h-8" alt="客服" />
+          <img src="@/assets/kefu.png" alt="客服" />
         </a>
         <a
           href="https://github.com/flipped-aurora/gin-vue-admin"
           target="_blank"
         >
-          <img src="@/assets/github.png" class="w-8 h-8" alt="github" />
+          <img src="@/assets/github.png" alt="github" />
         </a>
         <a href="https://space.bilibili.com/322210472" target="_blank">
-          <img src="@/assets/video.png" class="w-8 h-8" alt="视频站" />
+          <img src="@/assets/video.png" alt="视频站" />
         </a>
       </div>
-    </BottomInfo>
+      -->
+
+      <div class="copyright">
+        © 2025 SelfHub · 基于 <a href="https://github.com/flipped-aurora/gin-vue-admin"
+                                 target="_blank">Gin-Vue-Admin</a> 构建
+      </div>
+    </div>
   </div>
 </template>
 
@@ -172,7 +151,7 @@
   const loginForm = ref(null)
   const picPath = ref('')
   const loginFormData = reactive({
-    username: 'admin',
+    username: '',
     password: '',
     captcha: '',
     captchaId: '',
@@ -236,3 +215,223 @@
     }
   }
 </script>
+
+<style scoped lang="scss">
+  .user-layout {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #0a192f 0%, #0d7377 30%, #00ccc6 100%);
+    position: relative;
+    overflow: hidden;
+    padding: 20px;
+  }
+
+  .bg-shapes {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+
+    .shape {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.1;
+
+      &.shape-1 {
+        width: 500px;
+        height: 500px;
+        background: #00ccc6;
+        top: -250px;
+        left: -100px;
+      }
+
+      &.shape-2 {
+        width: 400px;
+        height: 400px;
+        background: #32e0c4;
+        bottom: -150px;
+        right: -100px;
+      }
+
+      &.shape-3 {
+        width: 300px;
+        height: 300px;
+        background: #7fffd4;
+        top: 50%;
+        left: 70%;
+      }
+    }
+  }
+
+  .login-container {
+    position: relative;
+    z-index: 2;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 40px;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .logo-area {
+    text-align: center;
+    margin-bottom: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .logo-img {
+      width: 96px;
+      height: 96px;
+      margin-bottom: 5px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .app-name {
+      color: white;
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .app-desc {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 14px;
+    }
+  }
+
+  .login-form {
+    .form-item {
+      margin-bottom: 24px;
+    }
+
+    :deep(.el-input__wrapper) {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 10px;
+      padding: 4px 15px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    :deep(.el-input__inner) {
+      color: #333;
+      font-size: 16px;
+    }
+
+    :deep(.el-input__suffix) {
+      display: flex;
+      align-items: center;
+    }
+  }
+
+  .captcha-container {
+    display: flex;
+    gap: 12px;
+
+    .captcha-input {
+      flex: 1;
+    }
+
+    .captcha-image {
+      flex-shrink: 0;
+      width: 120px;
+      height: 44px;
+      background: #c3d4f2;
+      border-radius: 10px;
+      overflow: hidden;
+      cursor: pointer;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+  }
+
+  .login-btn {
+    width: 100%;
+    height: 44px;
+    background-color: #00ccc6;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(0, 204, 198, 0.4);
+    transition: all 0.3s ease;
+
+    &:hover {
+      background-color: #00b3ad;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(0, 204, 198, 0.5);
+    }
+  }
+
+  .bottom-links {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 30px;
+
+    a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: rgba(0, 204, 198, 0.3);
+        transform: translateY(-3px);
+      }
+
+      img {
+        width: 20px;
+        height: 20px;
+      }
+    }
+  }
+
+  .copyright {
+    text-align: center;
+    margin-top: 20px;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 12px;
+  }
+
+  /* 响应式设计 */
+  @media (max-width: 768px) {
+    .login-container {
+      padding: 30px 20px;
+    }
+
+    .logo-area .app-name {
+      font-size: 24px;
+    }
+
+    .captcha-container {
+      flex-direction: column;
+    }
+
+    .captcha-image {
+      flex-shrink: 0;
+      width: 120px;
+      height: 44px;
+      background: #b8f3f1;
+      border-radius: 10px;
+      overflow: hidden;
+      cursor: pointer;
+    }
+  }
+</style>
