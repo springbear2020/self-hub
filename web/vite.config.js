@@ -42,7 +42,7 @@ export default ({ mode }) => {
     }
   }
 
-  const base = "/"
+  const base = "./"
   const root = "./"
   const outDir = "dist"
 

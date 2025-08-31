@@ -4,6 +4,7 @@ import (
 	"github.com/springbear2020/self-hub/server/global"
 	"github.com/springbear2020/self-hub/server/model/miser"
 	"github.com/springbear2020/self-hub/server/model/miser/request"
+	"github.com/springbear2020/self-hub/server/utils"
 )
 
 type MiserTransactionItemService struct{}
@@ -48,6 +49,9 @@ func (miserTransactionItemService *MiserTransactionItemService) GetMiserTransact
 	if info.Name != nil && *info.Name != "" {
 		db = db.Where("name LIKE ?", "%"+*info.Name+"%")
 	}
+	if info.Date != nil {
+		db = db.Where("date = ?", *info.Date)
+	}
 
 	// 记录总数
 	err = db.Count(&total).Error
@@ -68,13 +72,22 @@ func (miserTransactionItemService *MiserTransactionItemService) GetMiserTransact
 	return miserTransactionItems, total, err
 }
 
-func (miserTransactionItemService *MiserTransactionItemService) ListItemDistinctNames(uid uint) (list []string, err error) {
-	err = global.GVA_DB.
+func (miserTransactionItemService *MiserTransactionItemService) ListItemDistinctNames(uid uint, categoryId string) (list []string, err error) {
+	db := global.GVA_DB.
 		Model(&miser.MiserTransactionItem{}).
 		Select("DISTINCT name").
-		Where("user_id = ?", uid).
-		Order("name").
-		Find(&list).
-		Error
+		Where("user_id = ?", uid)
+	if categoryId != "" {
+		db = db.Where("category_id = ?", categoryId)
+	}
+
+	err = db.Find(&list).Error
+	if err != nil {
+		return
+	}
+
+	// 中文名排序
+	utils.SortChineseNames(list)
+
 	return
 }

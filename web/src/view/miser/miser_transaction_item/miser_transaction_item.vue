@@ -10,7 +10,10 @@
         @keyup.enter="onSubmit"
       >
         <el-form-item label="交易 ID" prop="transactionId">
-          <el-input-number v-model="searchInfo.transactionId" placeholder="交易 ID" />
+          <el-input-number
+            v-model="searchInfo.transactionId"
+            placeholder="交易 ID"
+          />
         </el-form-item>
 
         <el-form-item label="交易分类" prop="categoryId">
@@ -25,9 +28,7 @@
         </el-form-item>
 
         <el-form-item label="明细名称" prop="name">
-          <el-select
-            v-model="searchInfo.name" filterable
-          >
+          <el-select v-model="searchInfo.name" filterable>
             <el-option
               v-for="name in distinctItemNames"
               :key="name"
@@ -37,9 +38,18 @@
           </el-select>
         </el-form-item>
 
+        <el-form-item label="交易日期" prop="date">
+          <el-date-picker
+            v-model="searchInfo.date"
+            type="date"
+            placeholder="选择日期"
+            :disabled-date="disabledDate"
+          ></el-date-picker>
+        </el-form-item>
+
         <el-form-item>
           <el-button type="primary" icon="search" @click="onSubmit"
-          >查询
+            >查询
           </el-button>
           <el-button icon="refresh" @click="onReset">重置</el-button>
         </el-form-item>
@@ -50,7 +60,7 @@
     <div class="gva-table-box">
       <div class="gva-btn-list">
         <el-button type="primary" icon="plus" @click="openDialog()"
-        >新增
+          >新增
         </el-button>
         <el-button
           icon="delete"
@@ -86,6 +96,12 @@
 
         <el-table-column align="left" label="交易金额" prop="amount" />
 
+        <el-table-column align="left" label="交易日期" prop="date">
+          <template #default="{ row }">
+            {{ formatDate(row.date, 'yyyy-MM-dd') }}
+          </template>
+        </el-table-column>
+
         <el-table-column align="left" label="操作" fixed="right">
           <template #default="scope">
             <el-button
@@ -105,14 +121,14 @@
               icon="edit"
               class="table-button"
               @click="updateMiserTransactionItemFunc(scope.row)"
-            >编辑
+              >编辑
             </el-button>
             <el-button
               type="danger"
               link
               icon="delete"
               @click="deleteRow(scope.row)"
-            >删除
+              >删除
             </el-button>
           </template>
         </el-table-column>
@@ -143,7 +159,7 @@
           <span class="text-lg">{{ type === 'create' ? '新增' : '编辑' }}</span>
           <div>
             <el-button :loading="btnLoading" type="primary" @click="enterDialog"
-            >确 定
+              >确 定
             </el-button>
             <el-button @click="closeDialog">取 消</el-button>
           </div>
@@ -173,6 +189,13 @@
               :value="c.id"
             />
           </el-select>
+        </el-form-item>
+        <el-form-item label="交易日期:" prop="date">
+          <el-input
+            v-model="formData.date"
+            placeholder="交易日期"
+            disabled
+          />
         </el-form-item>
         <el-form-item label="明细名称:" prop="name">
           <el-select
@@ -221,20 +244,17 @@
         <el-descriptions-item label="交易 ID">
           {{ detailForm.transactionId }}
         </el-descriptions-item>
-        <el-descriptions-item label="交易时间">
-          {{ formatDate(detailForm.tradeDate, 'yyyy-MM-dd') }}
-        </el-descriptions-item>
         <el-descriptions-item label="交易分类">
           {{ categoryMap[detailForm.categoryId] }}
-        </el-descriptions-item>
-        <el-descriptions-item label="交易类型">
-          {{ transactionTypeMap[detailForm.transactionType] }}
         </el-descriptions-item>
         <el-descriptions-item label="明细名称">
           {{ detailForm.name }}
         </el-descriptions-item>
         <el-descriptions-item label="交易金额">
           {{ detailForm.amount }}
+        </el-descriptions-item>
+        <el-descriptions-item label="交易时间">
+          {{ formatDate(detailForm.date, 'yyyy-MM-dd') }}
         </el-descriptions-item>
         <el-descriptions-item label="创建时间">
           {{ formatDate(detailForm.createdAt) }}
@@ -248,7 +268,7 @@
 </template>
 
 <script setup>
-  import { getDictFunc, formatDate } from '@/utils/format'
+  import { formatDate } from '@/utils/format'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import { ref, reactive, computed, onMounted, watch } from 'vue'
   import { useAppStore } from '@/pinia'
@@ -278,15 +298,16 @@
     transactionId: undefined,
     categoryId: undefined,
     name: '',
-    amount: undefined
+    amount: undefined,
+    date: undefined
   })
 
   const handleBlur = async () => {
-    if (formData.value.transactionId) {
-      const { categoryId } = await fetchTransactionInfo(
-        formData.value.transactionId
-      )
+    const { transactionId } = formData.value
+    if (transactionId) {
+      const { categoryId, date } = await fetchTransactionInfo(transactionId)
       formData.value.categoryId = categoryId
+      formData.value.date = date
     }
   }
 
@@ -336,6 +357,9 @@
   const pageSize = ref(10)
   const tableData = ref([])
   const searchInfo = ref({})
+  const disabledDate = (time) => {
+    return time.getTime() > Date.now()
+  }
   // 重置
   const onReset = () => {
     searchInfo.value = {}
@@ -383,8 +407,7 @@
   // ============== 表格控制部分结束 ===============
 
   // 获取需要的字典 可能为空 按需保留
-  const setOptions = async () => {
-  }
+  const setOptions = async () => {}
 
   // 获取需要的字典 可能为空 按需保留
   setOptions()
@@ -423,9 +446,9 @@
         return
       }
       multipleSelection.value &&
-      multipleSelection.value.map((item) => {
-        ids.push(item.id)
-      })
+        multipleSelection.value.map((item) => {
+          ids.push(item.id)
+        })
       const res = await deleteMiserTransactionItemByIds({ ids })
       if (res.code === 0) {
         ElMessage({
@@ -484,7 +507,8 @@
       transactionId: undefined,
       categoryId: undefined,
       name: '',
-      amount: undefined
+      amount: undefined,
+      date: undefined
     }
   }
   // 弹窗确定
@@ -516,10 +540,7 @@
     })
   }
 
-  const detailForm = ref({
-    transactionType: undefined,
-    tradeDate: undefined
-  })
+  const detailForm = ref({})
 
   // 查看详情控制标记
   const detailShow = ref(false)
@@ -542,14 +563,6 @@
     const res = await findMiserTransactionItem({ id: row.id })
     if (res.code === 0) {
       detailForm.value = res.data
-
-      // 根据流水号查询流水信息
-      const { transactionType, date } = await fetchTransactionInfo(
-        row.transactionId
-      )
-      detailForm.value.transactionType = transactionType
-      detailForm.value.tradeDate = date
-
       openDetailShow()
     }
   }
@@ -558,25 +571,6 @@
   const closeDetailShow = () => {
     detailShow.value = false
     detailForm.value = {}
-  }
-
-  // 交易类型
-  const transactionTypeList = ref([])
-  const transactionTypeMap = computed(() => {
-    const resultMap = {}
-    transactionTypeList.value.forEach(({ value, label }) => {
-      resultMap[value] = label
-    })
-    return resultMap
-  })
-  const fetchTransactionTypeList = async () => {
-    const dataList = await getDictFunc('miser_transaction_type')
-    transactionTypeList.value = dataList.map(({ value, label }) => {
-      return {
-        label: label,
-        value: parseInt(value)
-      }
-    })
   }
 
   // 分类列表
@@ -608,12 +602,15 @@
     }
   }
 
-  watch(total, async () => {
-    await fetchItemNameList()
-  }, { immediate: true })
+  watch(
+    total,
+    async () => {
+      await fetchItemNameList()
+    },
+    { immediate: true }
+  )
 
   onMounted(() => {
-    fetchTransactionTypeList()
     fetchCategoryList()
   })
 </script>

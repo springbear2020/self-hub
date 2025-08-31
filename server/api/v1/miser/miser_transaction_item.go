@@ -114,8 +114,9 @@ func (miserTransactionItemApi *MiserTransactionItemApi) GetMiserTransactionItemL
 }
 
 func (miserTransactionItemApi *MiserTransactionItemApi) ListItemDistinctNames(c *gin.Context) {
+	categoryId := c.Query("categoryId")
 	uid := utils.GetUserID(c)
-	list, err := miserTransactionItemService.ListItemDistinctNames(uid)
+	list, err := miserTransactionItemService.ListItemDistinctNames(uid, categoryId)
 	if err != nil {
 		global.GVA_LOG.Error("查询失败!", zap.Error(err))
 		response.FailWithMessage("查询失败:"+err.Error(), c)

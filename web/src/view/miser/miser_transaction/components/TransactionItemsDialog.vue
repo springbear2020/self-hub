@@ -1,15 +1,17 @@
 <script setup>
-  import { onMounted, ref } from 'vue'
+  import { computed, ref } from 'vue'
   import { ElMessage } from 'element-plus'
-  import { createMiserTransactionItem, listItemDistinctNames } from '@/api/miser/miser_transaction_item'
+  import {
+    createMiserTransactionItem,
+    listItemDistinctNames
+  } from '@/api/miser/miser_transaction_item'
 
   const props = defineProps({
     // {categoryId: categoryName}
     categoryMap: {
       type: Object,
       required: true,
-      default: () => {
-      }
+      default: () => {}
     }
   })
 
@@ -19,10 +21,15 @@
     categoryAmount: null,
     items: []
   })
+  const itemsAmountSum = computed(() => {
+    return formData.value.items.reduce((sum, { amount }) => {
+      return sum + Number(amount || 0)
+    }, 0)
+  })
 
   const showDialog = ref(false)
   const dialogTitle = ref('批量新增流水明细')
-  const openDialog = (rowData) => {
+  const openDialog = async (rowData) => {
     const { id, categoryId, amount, date } = rowData
 
     // 表单数据赋值
@@ -30,10 +37,12 @@
       transactionId: id,
       categoryId: categoryId,
       categoryAmount: amount,
-      items: [{
-        name: null,
-        amount: null
-      }]
+      items: [
+        {
+          name: null,
+          amount: null
+        }
+      ]
     }
 
     // 设置对话框标题
@@ -41,12 +50,12 @@
     const categoryName = props.categoryMap[categoryId]
     dialogTitle.value = `批量新增『${dateStr}/${categoryName}/￥${amount}』流水明细`
 
+    // 查询交易分类流水名称去重列表
+    await fetchItemNameList(categoryId)
+
     showDialog.value = true
   }
-  const closeDialog = (needUpdate = false) => {
-    if (typeof needUpdate === 'boolean' && needUpdate === true) {
-      fetchItemNameList()
-    }
+  const closeDialog = () => {
     showDialog.value = false
   }
 
@@ -54,10 +63,8 @@
     const { transactionId, categoryId, categoryAmount } = formData.value
 
     // 各项之和校验
-    const amountSum = formData.value.items.reduce((sum, { amount }) => {
-      return sum + Number(amount || 0)
-    }, 0)
-    if (String(amountSum) !== String(categoryAmount)) {
+    const amountSum = Math.round(itemsAmountSum.value * 100) / 100
+    if (amountSum !== categoryAmount) {
       ElMessage({
         type: 'error',
         message: `明细金额之和 ${amountSum} 与流水金额 ${categoryAmount} 不等`
@@ -81,7 +88,7 @@
         type: 'success',
         message: '批量新增流水明细成功'
       })
-      closeDialog(true)
+      closeDialog()
     }
   }
   const handleAdd = () => {
@@ -93,21 +100,23 @@
   const handleRemove = (index) => {
     formData.value.items.splice(index, 1)
   }
+  const handleCopy = (index) => {
+    formData.value.items.push({
+      name: '',
+      amount: formData.value.items[index].amount
+    })
+  }
 
   // 去重明细名称列表
   const distinctItemNames = ref([])
-  const fetchItemNameList = async () => {
-    const { code, data } = await listItemDistinctNames()
+  const fetchItemNameList = async (categoryId) => {
+    const { code, data } = await listItemDistinctNames({ categoryId })
     if (code === 0 && data && data.length > 0) {
       distinctItemNames.value = data
     } else {
       distinctItemNames.value = []
     }
   }
-
-  onMounted(() => {
-    fetchItemNameList()
-  })
 
   defineExpose({ openDialog })
 </script>
@@ -118,6 +127,7 @@
     :title="dialogTitle"
     width="800px"
     :before-close="closeDialog"
+    :close-on-click-modal="false"
   >
     <el-form :model="formData" label-width="70px">
       <el-table :data="formData.items" border>
@@ -153,6 +163,11 @@
         <el-table-column label="操作" align="center">
           <template #default="{ $index }">
             <el-button
+              type="default"
+              icon="copyDocument"
+              @click="handleCopy($index)"
+            />
+            <el-button
               type="danger"
               icon="delete"
               @click="handleRemove($index)"
@@ -161,8 +176,14 @@
         </el-table-column>
       </el-table>
 
-      <div class="mt-3">
-        <el-button type="primary" icon="circle-plus" @click="handleAdd" />
+      <div class="mt-3 footer-operation-box">
+        <el-button type="info" icon="circle-plus" @click="handleAdd" />
+        <el-input-number
+          v-model="itemsAmountSum"
+          :min="0"
+          :precision="2"
+          disabled
+        />
       </div>
     </el-form>
 
@@ -172,3 +193,11 @@
     </template>
   </el-dialog>
 </template>
+
+<style lang="scss" scoped>
+  .footer-operation-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+</style>

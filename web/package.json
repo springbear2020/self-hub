@@ -69,6 +69,7 @@
     "dotenv": "^16.4.5",
     "eslint": "^8.57.0",
     "eslint-plugin-vue": "^9.19.2",
+    "prettier": "^3.6.2",
     "sass": "^1.78.0",
     "terser": "^5.31.6",
     "vite": "^6.2.3",

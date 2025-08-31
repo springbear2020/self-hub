@@ -23,6 +23,7 @@ require (
 	github.com/mholt/archives v0.1.1
 	github.com/minio/minio-go/v7 v7.0.84
 	github.com/mojocn/base64Captcha v1.3.8
+	github.com/mozillazg/go-pinyin v0.21.0
 	github.com/otiai10/copy v1.14.1
 	github.com/pkg/errors v0.9.1
 	github.com/qiniu/go-sdk/v7 v7.25.2

@@ -9,28 +9,28 @@
     transactionTypeMap: {
       type: Object,
       required: true,
-      default: () => {
-      }
+      default: () => {}
     },
     // {categoryId: transactionType}
     typedCategoryMap: {
       type: Object,
       required: true,
-      default: () => {
-      }
+      default: () => {}
     },
     // {transactionType: categoryArray}
     groupedCategoryMap: {
       type: Object,
       required: true,
-      default: () => {
-      }
+      default: () => {}
     }
   })
 
   const TRANSACTION_TYPE_INCOME = 1
   const TRANSACTION_TYPE_EXPENSE = 2
 
+  const disabledDate = (time) => {
+    return time.getTime() > Date.now()
+  }
   const formData = ref({
     date: (() => {
       const d = new Date()
@@ -41,14 +41,16 @@
     categories: {}
   })
   const income = computed(() => {
-    const incomeCategories = props.groupedCategoryMap[TRANSACTION_TYPE_INCOME] || []
+    const incomeCategories =
+      props.groupedCategoryMap[TRANSACTION_TYPE_INCOME] || []
     return incomeCategories.reduce((sum, c) => {
       const incomeAmount = Number(formData.value.categories[c.id]) || 0
       return sum + incomeAmount
     }, 0)
   })
   const expense = computed(() => {
-    const expenseCategories = props.groupedCategoryMap[TRANSACTION_TYPE_EXPENSE] || []
+    const expenseCategories =
+      props.groupedCategoryMap[TRANSACTION_TYPE_EXPENSE] || []
     return expenseCategories.reduce((sum, c) => {
       const amount = Number(formData.value.categories[c.id]) || 0
       return sum + amount
@@ -107,6 +109,7 @@
     title="批量新增交易流水"
     width="800px"
     :before-close="closeDialog"
+    :close-on-click-modal="false"
   >
     <div class="date-picker-box">
       <el-date-picker
@@ -114,21 +117,21 @@
         type="date"
         placeholder="选择日期"
         :clearable="false"
+        :disabled-date="disabledDate"
       />
     </div>
 
     <el-form :model="formData" inline label-width="70px">
       <!-- 按交易类型分别录入 -->
-      <template v-for="(categories, transactionType) in groupedCategoryMap" :key="transactionType">
+      <template
+        v-for="(categories, transactionType) in groupedCategoryMap"
+        :key="transactionType"
+      >
         <el-divider>
           {{ transactionTypeMap[transactionType] || '未知' }}
         </el-divider>
 
-        <el-form-item
-          v-for="c in categories"
-          :key="c.id"
-          :label="c.name"
-        >
+        <el-form-item v-for="c in categories" :key="c.id" :label="c.name">
           <el-input-number
             v-model="formData.categories[c.id]"
             :min="0"
@@ -153,8 +156,11 @@
 
     <template #footer>
       <el-button @click="closeDialog">取消</el-button>
-      <el-button type="primary" @click="handleSubmit" :disabled="income === 0 && expense === 0"
-      >保存
+      <el-button
+        type="primary"
+        @click="handleSubmit"
+        :disabled="income === 0 && expense === 0"
+        >保存
       </el-button>
     </template>
   </el-dialog>

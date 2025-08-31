@@ -25,7 +25,7 @@
 
         <el-form-item>
           <el-button type="primary" icon="search" @click="onSubmit"
-          >查询
+            >查询
           </el-button>
           <el-button icon="refresh" @click="onReset">重置</el-button>
         </el-form-item>
@@ -36,7 +36,7 @@
     <div class="gva-table-box">
       <div class="gva-btn-list">
         <el-button type="primary" icon="plus" @click="openDialog()"
-        >新增
+          >新增
         </el-button>
         <el-button
           icon="delete"
@@ -99,7 +99,7 @@
               link
               icon="delete"
               @click="deleteRow(scope.row)"
-            >删除
+              >删除
             </el-button>
           </template>
         </el-table-column>
@@ -130,7 +130,7 @@
           <span class="text-lg">{{ type === 'create' ? '新增' : '编辑' }}</span>
           <div>
             <el-button :loading="btnLoading" type="primary" @click="enterDialog"
-            >确 定
+              >确 定
             </el-button>
             <el-button @click="closeDialog">取 消</el-button>
           </div>
@@ -159,6 +159,7 @@
             v-model="formData.name"
             :clearable="true"
             placeholder="请输入交易分类"
+            @blur="handleBlur"
           />
         </el-form-item>
         <el-form-item label="分类描述:" prop="description">
@@ -288,6 +289,12 @@
     ]
   })
 
+  const handleBlur = () => {
+    if (type.value === 'create') {
+      formData.value.description = formData.value.name
+    }
+  }
+
   const elFormRef = ref()
   const elSearchFormRef = ref()
 
@@ -344,8 +351,7 @@
   // ============== 表格控制部分结束 ===============
 
   // 获取需要的字典 可能为空 按需保留
-  const setOptions = async () => {
-  }
+  const setOptions = async () => {}
 
   // 获取需要的字典 可能为空 按需保留
   setOptions()
@@ -384,9 +390,9 @@
         return
       }
       multipleSelection.value &&
-      multipleSelection.value.map((item) => {
-        ids.push(item.id)
-      })
+        multipleSelection.value.map((item) => {
+          ids.push(item.id)
+        })
       const res = await deleteMiserCategoryByIds({ ids })
       if (res.code === 0) {
         ElMessage({

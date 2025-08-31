@@ -48,9 +48,10 @@ export const getMiserTransactionItemList = (params) => {
   })
 }
 
-export const listItemDistinctNames = () => {
+export const listItemDistinctNames = (params) => {
   return service({
     url: '/miserTransactionItem/listItemDistinctNames',
-    method: 'get'
+    method: 'get',
+    params
   })
 }
