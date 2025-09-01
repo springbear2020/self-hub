@@ -10,7 +10,8 @@
 }
 
 .gva-table-box {
-  @apply p-4 bg-white text-slate-700 dark:text-slate-400 dark:bg-slate-900 rounded my-2;
+  margin: 8px 0;
+  @apply p-4 bg-white text-slate-700 dark:text-slate-400 dark:bg-slate-900 rounded;
   .el-table {
     @apply border-x border-t border-b-0 rounded border-table-border border-solid -mx-[1px];
   }
@@ -32,7 +33,8 @@
 }
 
 .gva-search-box {
-  @apply p-4 bg-white text-slate-700 dark:text-slate-400 dark:bg-slate-900 rounded my-2;
+  margin: 8px 0;
+  @apply p-4 bg-white text-slate-700 dark:text-slate-400 dark:bg-slate-900 rounded;
 }
 
 .gva-form-box {

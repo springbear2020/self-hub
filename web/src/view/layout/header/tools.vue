@@ -5,6 +5,7 @@
 
 <template>
   <div class="flex items-center mx-4 gap-4">
+    <!--
     <el-tooltip class="" effect="dark" content="视频教程" placement="bottom">
       <el-dropdown @command="toDoc">
         <el-icon
@@ -25,6 +26,7 @@
         </template>
       </el-dropdown>
     </el-tooltip>
+    -->
 
     <el-tooltip class="" effect="dark" content="搜索" placement="bottom">
       <el-icon

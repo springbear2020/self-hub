@@ -6,7 +6,7 @@
   const list = ref([])
   const noMore = ref(false)
   const loading = ref(false)
-  const minYear = 2025
+  const minYear = 2020
   const currentYear = new Date().getFullYear()
   const formData = ref({
     page: 1,
@@ -60,14 +60,22 @@
 
 <template>
   <div class="year-adjuster">
-    <el-button :disabled="formData.year <= minYear" @click="changeYear(-1)">
-      &lt;
+    <el-button
+      circle
+      :disabled="formData.year <= minYear"
+      @click="changeYear(-1)"
+      icon="ArrowLeftBold"
+    >
     </el-button>
 
     <span class="year-display">{{ formData.year }}</span>
 
-    <el-button :disabled="formData.year >= currentYear" @click="changeYear(1)">
-      &gt;
+    <el-button
+      circle
+      :disabled="formData.year >= currentYear"
+      @click="changeYear(1)"
+      icon="ArrowRightBold"
+    >
     </el-button>
   </div>
 
@@ -95,39 +103,43 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    margin: 7px 0;
-    gap: 7px;
+    padding: 16px 0;
+    gap: 8px;
 
     .year-display {
-      font-weight: 600;
-      font-size: 18px;
-      min-width: 60px;
+      font-weight: bold;
+      font-size: 20px;
+      color: #333;
+      min-width: 80px;
       text-align: center;
     }
   }
 
   .infinite-list {
-    height: calc(100vh - 100px);
-    overflow: auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    box-sizing: border-box;
+    display: grid;
+    gap: 8px;
 
     .infinite-list-item {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      width: 100%;
-      margin-bottom: 7px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+      padding: 16px;
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
     }
 
-    .loading-text,
-    .no-more-text {
-      text-align: center;
-      padding: 4px;
-      color: var(--el-text-color-secondary);
+    .infinite-list-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
+  }
+
+  .loading-text,
+  .no-more-text {
+    text-align: center;
+    padding: 8px 0 16px;
+    color: #999;
+    font-size: 14px;
   }
 </style>

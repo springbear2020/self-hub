@@ -72,7 +72,12 @@
 
         <el-table-column align="left" label="排序值" prop="sort" />
 
-        <el-table-column align="left" label="操作" fixed="right">
+        <el-table-column
+          align="left"
+          label="操作"
+          fixed="right"
+          min-width="200"
+        >
           <template #default="scope">
             <el-button
               type="info"
@@ -144,7 +149,7 @@
         :rules="rule"
         label-width="80px"
       >
-        <el-form-item label="交易类型:" prop="transactionType">
+        <el-form-item label="交易类型" prop="transactionType">
           <el-select v-model="formData.transactionType">
             <el-option
               v-for="t in transactionTypeList"
@@ -154,7 +159,7 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="交易分类:" prop="name">
+        <el-form-item label="交易分类" prop="name">
           <el-input
             v-model="formData.name"
             :clearable="true"
@@ -162,14 +167,14 @@
             @blur="handleBlur"
           />
         </el-form-item>
-        <el-form-item label="分类描述:" prop="description">
+        <el-form-item label="分类描述" prop="description">
           <el-input
             v-model="formData.description"
             :clearable="true"
             placeholder="请输入分类描述"
           />
         </el-form-item>
-        <el-form-item label="排序值:" prop="sort">
+        <el-form-item label="排序值" prop="sort">
           <el-input-number v-model="formData.sort" placeholder="请输入排序值" />
         </el-form-item>
       </el-form>
@@ -365,7 +370,8 @@
 
   // 删除行
   const deleteRow = (row) => {
-    ElMessageBox.confirm('确定要删除吗?', '提示', {
+    const tip = `确定要删除『${row.name}』吗？`
+    ElMessageBox.confirm(tip, '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'

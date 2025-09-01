@@ -242,7 +242,7 @@ func (s *MiserStatService) getCategoryAmount(uid uint, transactionType int, req 
 func (s *MiserStatService) getTotalAmount(uid uint, transactionType int, req *request.MiserStat) (float64, error) {
 	var amount float64
 	err := global.GVA_DB.Raw(`
-	SELECT SUM(amount) AS amount
+	SELECT IFNULL(SUM(amount), 0) AS amount
 	FROM miser_transactions
 	WHERE user_id = ?
 	  AND transaction_type = ?

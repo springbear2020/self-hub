@@ -18,7 +18,7 @@
   const formData = ref({
     transactionId: null,
     categoryId: null,
-    categoryAmount: null,
+    categoryDate: null,
     items: []
   })
   const itemsAmountSum = computed(() => {
@@ -37,6 +37,7 @@
       transactionId: id,
       categoryId: categoryId,
       categoryAmount: amount,
+      categoryDate: date,
       items: [
         {
           name: null,
@@ -78,7 +79,8 @@
         transactionId,
         categoryId,
         name,
-        amount
+        amount,
+        date: formData.value.categoryDate
       })
     })
 

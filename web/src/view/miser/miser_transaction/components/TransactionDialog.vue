@@ -34,7 +34,7 @@
   const formData = ref({
     date: (() => {
       const d = new Date()
-      d.setMonth(d.getMonth())
+      d.setMonth(d.getMonth() - 1) // 默认批量采集上一个月
       d.setDate(10)
       return d
     })(),
@@ -63,7 +63,7 @@
     formData.value = {
       date: (() => {
         const d = new Date()
-        d.setMonth(d.getMonth())
+        d.setMonth(d.getMonth() - 1) // 默认批量采集上一个月
         d.setDate(10)
         return d
       })(),

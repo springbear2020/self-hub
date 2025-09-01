@@ -23,11 +23,11 @@
         v-if="config.side_mode === 'combination' && device !== 'mobile'"
         mode="normal"
       />
-      <div class="flex-1 px-2 w-0 h-full">
+      <div class="flex-1 router-view-box w-0 h-full">
         <gva-tabs v-if="config.showTabs" />
         <div
           class="overflow-auto"
-          :class="config.showTabs ? 'gva-container2' : 'gva-container pt-1'"
+          :class="config.showTabs ? 'gva-container2' : 'gva-container'"
         >
           <router-view v-if="reloadFlag" v-slot="{ Component, route }">
             <div

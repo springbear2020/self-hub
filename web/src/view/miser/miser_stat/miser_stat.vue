@@ -15,11 +15,7 @@
     return formatDate(monthRange.value[1], 'yyyy-MM')
   })
   const disabledDate = (time) => {
-    const minDate = new Date(minYear, minMonth)
-    const maxDate = new Date()
-    return (
-      time.getTime() < minDate.getTime() || time.getTime() > maxDate.getTime()
-    )
+    return time.getTime() > Date.now()
   }
   const generateYearShortcuts = () => {
     const shortcuts = []
@@ -99,6 +95,8 @@
     <lazy-wrapper>
       <table-item-stat :start-month="startMonth" :end-month="endMonth" />
     </lazy-wrapper>
+
+    <div class="no-more-text">没有更多了</div>
   </div>
 </template>
 
@@ -106,11 +104,18 @@
   .month-picker {
     display: flex;
     align-content: center;
-    justify-content: left;
-    padding: 8px 0;
+    justify-content: center;
+    padding: 16px 0;
 
     .el-form-item {
       margin-bottom: 0;
     }
+  }
+
+  .no-more-text {
+    text-align: center;
+    padding: 16px 0;
+    color: #999;
+    font-size: 14px;
   }
 </style>

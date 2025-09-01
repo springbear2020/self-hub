@@ -22,7 +22,7 @@
 
         <el-form-item>
           <el-button type="primary" icon="search" @click="onSubmit"
-          >查询
+            >查询
           </el-button>
           <el-button icon="refresh" @click="onReset">重置</el-button>
         </el-form-item>
@@ -33,7 +33,7 @@
     <div class="gva-table-box">
       <div class="gva-btn-list">
         <el-button type="primary" icon="plus" @click="openDialog()"
-        >新增
+          >新增
         </el-button>
         <el-button
           icon="delete"
@@ -68,6 +68,7 @@
           align="left"
           label="操作"
           fixed="right"
+          min-width="200"
         >
           <template #default="scope">
             <el-button
@@ -95,7 +96,7 @@
               link
               icon="delete"
               @click="deleteRow(scope.row)"
-            >删除
+              >删除
             </el-button>
           </template>
         </el-table-column>
@@ -127,7 +128,7 @@
           <span class="text-lg">{{ type === 'create' ? '新增' : '编辑' }}</span>
           <div>
             <el-button :loading="btnLoading" type="primary" @click="enterDialog"
-            >确 定
+              >确 定
             </el-button>
             <el-button @click="closeDialog">取 消</el-button>
           </div>
@@ -255,6 +256,18 @@
         trigger: ['input', 'blur']
       }
     ],
+    description: [
+      {
+        required: true,
+        message: '',
+        trigger: ['input', 'blur']
+      },
+      {
+        whitespace: true,
+        message: '不能只输入空格',
+        trigger: ['input', 'blur']
+      }
+    ],
     isActive: [
       {
         required: true,
@@ -333,8 +346,7 @@
   // ============== 表格控制部分结束 ===============
 
   // 获取需要的字典 可能为空 按需保留
-  const setOptions = async () => {
-  }
+  const setOptions = async () => {}
 
   // 获取需要的字典 可能为空 按需保留
   setOptions()
@@ -348,7 +360,8 @@
 
   // 删除行
   const deleteRow = (row) => {
-    ElMessageBox.confirm('确定要删除吗?', '提示', {
+    const tip = `确定要删除『${row.name}』吗？`
+    ElMessageBox.confirm(tip, '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'
@@ -373,9 +386,9 @@
         return
       }
       multipleSelection.value &&
-      multipleSelection.value.map((item) => {
-        ids.push(item.id)
-      })
+        multipleSelection.value.map((item) => {
+          ids.push(item.id)
+        })
       const res = await deleteDailyTaskByIds({ ids })
       if (res.code === 0) {
         ElMessage({

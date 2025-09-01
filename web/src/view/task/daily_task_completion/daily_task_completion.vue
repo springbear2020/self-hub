@@ -27,13 +27,12 @@
             placeholder="选择日期"
             :disabled-date="disabledDate"
             value-format="YYYY-MM-DDT00:00:00+08:00"
-            :clearable="false"
           />
         </el-form-item>
 
         <el-form-item>
           <el-button type="primary" icon="search" @click="onSubmit"
-          >查询
+            >查询
           </el-button>
           <el-button icon="refresh" @click="onReset">重置</el-button>
         </el-form-item>
@@ -44,7 +43,7 @@
     <div class="gva-table-box">
       <div class="gva-btn-list">
         <el-button type="primary" icon="plus" @click="openDialog()"
-        >新增
+          >新增
         </el-button>
         <el-button
           icon="delete"
@@ -69,12 +68,12 @@
         <el-table-column align="left" label="ID" prop="id" width="110" />
         <el-table-column align="left" label="任务名称" prop="taskId">
           <template #default="{ row }"
-          >{{ dailyTaskMap[row.taskId] }}
+            >{{ dailyTaskMap[row.taskId] }}
           </template>
         </el-table-column>
         <el-table-column align="left" label="完成日期" prop="finishDate">
           <template #default="scope"
-          >{{ formatDate(scope.row.finishDate, 'yyyy-MM-dd') }}
+            >{{ formatDate(scope.row.finishDate, 'yyyy-MM-dd') }}
           </template>
         </el-table-column>
         <el-table-column align="left" label="计数值" prop="countValue" />
@@ -84,6 +83,7 @@
           align="left"
           label="操作"
           fixed="right"
+          min-width="200"
         >
           <template #default="scope">
             <el-button
@@ -103,14 +103,14 @@
               icon="edit"
               class="table-button"
               @click="updateDailyTaskCompletionFunc(scope.row)"
-            >编辑
+              >编辑
             </el-button>
             <el-button
               type="danger"
               link
               icon="delete"
               @click="deleteRow(scope.row)"
-            >删除
+              >删除
             </el-button>
           </template>
         </el-table-column>
@@ -142,7 +142,7 @@
           <span class="text-lg">{{ type === 'create' ? '新增' : '编辑' }}</span>
           <div>
             <el-button :loading="btnLoading" type="primary" @click="enterDialog"
-            >确 定
+              >确 定
             </el-button>
             <el-button @click="closeDialog">取 消</el-button>
           </div>
@@ -173,6 +173,7 @@
             style="width: 100%"
             placeholder="选择日期"
             :disabled-date="disabledDate"
+            :clearable="false"
           />
         </el-form-item>
         <el-form-item label="计数值" prop="countValue">
@@ -281,6 +282,13 @@
         message: '',
         trigger: ['input', 'blur']
       }
+    ],
+    remark: [
+      {
+        required: true,
+        message: '',
+        trigger: ['input', 'blur']
+      }
     ]
   })
 
@@ -349,8 +357,7 @@
   // ============== 表格控制部分结束 ===============
 
   // 获取需要的字典 可能为空 按需保留
-  const setOptions = async () => {
-  }
+  const setOptions = async () => {}
 
   // 获取需要的字典 可能为空 按需保留
   setOptions()
@@ -364,7 +371,8 @@
 
   // 删除行
   const deleteRow = (row) => {
-    ElMessageBox.confirm('确定要删除吗?', '提示', {
+    const tip = `确定要删除『${dailyTaskMap.value[row.taskId]}/${formatDate(row.finishDate, 'yyyy-MM-dd')}』吗？`
+    ElMessageBox.confirm(tip, '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'
@@ -389,9 +397,9 @@
         return
       }
       multipleSelection.value &&
-      multipleSelection.value.map((item) => {
-        ids.push(item.id)
-      })
+        multipleSelection.value.map((item) => {
+          ids.push(item.id)
+        })
       const res = await deleteDailyTaskCompletionByIds({ ids })
       if (res.code === 0) {
         ElMessage({

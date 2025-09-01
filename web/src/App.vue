@@ -34,10 +34,16 @@ defineOptions({
 }
 
 .gva-container {
-  height: calc(100% - 2.5rem);
+  /* 100vh - headerHeight */
+  height: calc(100vh - 56px);
 }
 
 .gva-container2 {
-  height: calc(100% - 4.5rem);
+  /* 100vh - headerHeight - tabsHeight */
+  height: calc(100vh - 56px - 41px);
+}
+
+.router-view-box {
+  padding: 0 8px;
 }
 </style>

@@ -44,7 +44,7 @@
             type="date"
             placeholder="选择日期"
             :disabled-date="disabledDate"
-          ></el-date-picker>
+          />
         </el-form-item>
 
         <el-form-item>
@@ -102,7 +102,12 @@
           </template>
         </el-table-column>
 
-        <el-table-column align="left" label="操作" fixed="right">
+        <el-table-column
+          align="left"
+          label="操作"
+          fixed="right"
+          min-width="200"
+        >
           <template #default="scope">
             <el-button
               type="info"
@@ -173,14 +178,15 @@
         :rules="rule"
         label-width="80px"
       >
-        <el-form-item label="交易 ID:" prop="transactionId">
+        <el-form-item label="交易 ID" prop="transactionId">
           <el-input-number
             v-model="formData.transactionId"
             :clearable="true"
             @blur="handleBlur"
+            placeholder="交易 ID"
           />
         </el-form-item>
-        <el-form-item label="交易分类:" prop="categoryId">
+        <el-form-item label="交易分类" prop="categoryId">
           <el-select v-model="formData.categoryId" disabled>
             <el-option
               v-for="c in categoryList"
@@ -190,20 +196,16 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="交易日期:" prop="date">
-          <el-input
-            v-model="formData.date"
-            placeholder="交易日期"
-            disabled
-          />
+        <el-form-item label="交易日期" prop="date">
+          <el-input v-model="formData.date" placeholder="交易日期" disabled />
         </el-form-item>
-        <el-form-item label="明细名称:" prop="name">
+        <el-form-item label="明细名称" prop="name">
           <el-select
             v-model="formData.name"
             allow-create
             filterable
             default-first-option
-            placeholder="请入明细名称"
+            placeholder="请输入明细名称"
           >
             <el-option
               v-for="name in distinctItemNames"
@@ -213,7 +215,7 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="交易金额:" prop="amount">
+        <el-form-item label="交易金额" prop="amount">
           <el-input-number
             v-model="formData.amount"
             style="width: 100%"
@@ -345,6 +347,13 @@
         message: '',
         trigger: ['input', 'blur']
       }
+    ],
+    date: [
+      {
+        required: true,
+        message: '',
+        trigger: ['input', 'blur']
+      }
     ]
   })
 
@@ -421,7 +430,8 @@
 
   // 删除行
   const deleteRow = (row) => {
-    ElMessageBox.confirm('确定要删除吗?', '提示', {
+    const tip = `确定要删除『${row.name}/${formatDate(row.date, 'yyyy-MM-dd')}』吗？`
+    ElMessageBox.confirm(tip, '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'
