@@ -138,7 +138,7 @@ mysql:
     prefix: ""
     port: "3306"
     config: charset=utf8mb4&parseTime=True&loc=Local
-    db-name: gva
+    db-name: self_hub
     username: root
     password: root
     path: 127.0.0.1

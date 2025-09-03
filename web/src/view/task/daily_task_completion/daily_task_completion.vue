@@ -177,7 +177,13 @@
           />
         </el-form-item>
         <el-form-item label="计数值" prop="countValue">
-          <el-input-number v-model="formData.countValue" style="width: 100%" />
+          <el-input-number
+            v-model="formData.countValue"
+            :min="countValueRange[0]"
+            :max="countValueRange[1]"
+            style="width: 100%"
+            placeholder="请输入任务完成计数值"
+          />
         </el-form-item>
         <el-form-item label="完成说明" prop="remark">
           <el-input
@@ -240,7 +246,7 @@
   import { listActiveTaskList } from '@/api/task/daily_task'
   import { formatDate } from '@/utils/format'
   import { ElMessage, ElMessageBox } from 'element-plus'
-  import { ref, reactive, onMounted } from 'vue'
+  import { ref, reactive, onMounted, computed } from 'vue'
   import { useAppStore } from '@/pinia'
   import { InfoFilled } from '@element-plus/icons-vue'
 
@@ -258,6 +264,13 @@
     finishDate: new Date(),
     countValue: 1,
     remark: ''
+  })
+  const countValueRange = computed(() => {
+    const target = dailyTaskList.value.find(
+      (item) => item.id === formData.value.taskId
+    )
+    const { minValue = 1, maxValue = 100 } = target || {}
+    return [ minValue, maxValue ]
   })
 
   // 验证规则

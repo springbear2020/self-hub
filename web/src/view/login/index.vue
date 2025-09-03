@@ -23,6 +23,7 @@
       >
         <el-form-item prop="username" class="form-item">
           <el-input
+            ref="usernameInputRef"
             v-model="loginFormData.username"
             size="large"
             placeholder="请输入用户名"
@@ -106,7 +107,7 @@
   import { captcha } from '@/api/user'
   import { checkDB } from '@/api/initdb'
   import BottomInfo from '@/components/bottomInfo/bottomInfo.vue'
-  import { reactive, ref } from 'vue'
+  import { onMounted, reactive, ref } from 'vue'
   import { ElMessage } from 'element-plus'
   import { useRouter } from 'vue-router'
   import { useUserStore } from '@/pinia/modules/user'
@@ -148,6 +149,7 @@
   loginVerify()
 
   // 登录相关操作
+  const usernameInputRef = ref()
   const loginForm = ref(null)
   const picPath = ref('')
   const loginFormData = reactive({
@@ -214,6 +216,10 @@
       }
     }
   }
+
+  onMounted(() => {
+    usernameInputRef.value.focus()
+  })
 </script>
 
 <style scoped lang="scss">

@@ -107,19 +107,32 @@
     ]
   })
 
+  const handleResize = () => {
+    pieIncomeInstance?.resize()
+    pieExpenseInstance?.resize()
+    pieBalanceInstance?.resize()
+  }
+
   onMounted(async () => {
     pieIncomeInstance = echarts.init(pieIncomeRef.value)
     pieExpenseInstance = echarts.init(pieExpenseRef.value)
     pieBalanceInstance = echarts.init(pieBalanceRef.value)
+
+    window.addEventListener('resize', handleResize)
 
     await fetchCategories()
     await fetchAndRender()
   })
 
   onBeforeUnmount(() => {
+    window.removeEventListener('resize', handleResize)
+
     pieIncomeInstance?.dispose()
     pieExpenseInstance?.dispose()
     pieBalanceInstance?.dispose()
+    pieIncomeInstance = null
+    pieExpenseInstance = null
+    pieBalanceInstance = null
   })
 
   watch(

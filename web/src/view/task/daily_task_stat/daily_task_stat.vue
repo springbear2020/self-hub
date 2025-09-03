@@ -16,7 +16,7 @@
     endDate: `${currentYear}-12-31`
   })
 
-  const changeYear = (delta) => {
+  const changeYear = (delta = 0) => {
     const newYear = formData.value.year + delta
     formData.value.year = newYear
     formData.value.page = 1
@@ -88,8 +88,9 @@
     <div v-for="item in list" :key="item.id" class="infinite-list-item">
       <calendar-heatmap
         :year="formData.year"
-        :title="item.name"
-        :data="item.heatmapData"
+        :task="item"
+        :completions="item.heatmapData"
+        @refresh="changeYear"
       />
     </div>
 

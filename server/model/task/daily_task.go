@@ -11,6 +11,8 @@ type DailyTask struct {
 	Description *string    `json:"description" form:"description" gorm:"comment:任务描述;column:description;size:256;"`
 	IsActive    *int       `json:"isActive" form:"isActive" gorm:"comment:是否启用(1-启用,0-禁用);column:is_active;" binding:"required"`
 	Sort        *int       `json:"sort" form:"sort" gorm:"comment:排序值;column:sort;size:10;" binding:"required"`
+	MinValue    *int       `json:"minValue" form:"minValue" gorm:"comment:计数值最小值;column:min_value;size:10;" binding:"required"`
+	MaxValue    *int       `json:"maxValue" form:"maxValue" gorm:"comment:计数值最大值;column:max_value;size:10;" binding:"required"`
 	CreatedAt   *time.Time `json:"createdAt" form:"createdAt" gorm:"comment:创建时间;column:created_at;"`
 	UpdatedAt   *time.Time `json:"updatedAt" form:"updatedAt" gorm:"comment:更新时间;column:updated_at;"`
 }

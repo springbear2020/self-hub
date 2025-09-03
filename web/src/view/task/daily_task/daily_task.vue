@@ -64,6 +64,11 @@
           </template>
         </el-table-column>
         <el-table-column align="left" label="排序值" prop="sort" />
+        <el-table-column align="left" label="数值范围" prop="minValue">
+          <template #default="{ row }">
+            <span>[{{ row.minValue }},{{ row.maxValue }}]</span>
+          </template>
+        </el-table-column>
         <el-table-column
           align="left"
           label="操作"
@@ -165,6 +170,19 @@
         <el-form-item label="排序值" prop="sort">
           <el-input-number v-model="formData.sort" placeholder="请输入排序值" />
         </el-form-item>
+        <el-form-item label="计数值最小值" prop="minValue">
+          <el-input-number
+            v-model="formData.minValue"
+            placeholder="请输入最小值"
+            :min="1"
+          />
+        </el-form-item>
+        <el-form-item label="计数值最大值" prop="maxValue">
+          <el-input-number
+            v-model="formData.maxValue"
+            placeholder="请输入最大值"
+          />
+        </el-form-item>
       </el-form>
     </el-drawer>
 
@@ -195,6 +213,9 @@
         </el-descriptions-item>
         <el-descriptions-item label="排序值">
           {{ detailForm.sort }}
+        </el-descriptions-item>
+        <el-descriptions-item label="数值范围">
+          <span>[{{ detailForm.minValue }},{{ detailForm.maxValue }}]</span>
         </el-descriptions-item>
         <el-descriptions-item label="创建时间">
           {{ formatDate(detailForm.createdAt) }}
@@ -236,6 +257,8 @@
     description: '',
     isActive: 1,
     sort: 1,
+    minValue: 1,
+    maxValue: 100,
     isActiveBool: true
   })
   const handleSwitchChange = (value) => {
@@ -276,6 +299,20 @@
       }
     ],
     sort: [
+      {
+        required: true,
+        message: '',
+        trigger: ['input', 'blur']
+      }
+    ],
+    minValue: [
+      {
+        required: true,
+        message: '',
+        trigger: ['input', 'blur']
+      }
+    ],
+    maxValue: [
       {
         required: true,
         message: '',
@@ -450,7 +487,9 @@
       description: '',
       isActive: 1,
       isActiveBool: true,
-      sort: total.value + 1
+      sort: total.value + 1,
+      minValue: 1,
+      maxValue: 100
     }
   }
   // 弹窗确定

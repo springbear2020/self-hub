@@ -9,10 +9,14 @@ import (
 type MiserTransactionService struct{}
 
 func (miserTransactionService *MiserTransactionService) CreateMiserTransaction(uid uint, miserTransaction []miser.MiserTransaction) (err error) {
-	for i := 0; i < len(miserTransaction); i++ {
-		miserTransaction[i].UserId = uid
+	result := miserTransaction[:0] // 重用底层数组
+	for _, tx := range miserTransaction {
+		if tx.Amount != nil && *tx.Amount != 0 {
+			tx.UserId = uid
+			result = append(result, tx)
+		}
 	}
-	err = global.GVA_DB.Create(miserTransaction).Error
+	err = global.GVA_DB.Create(result).Error
 	return err
 }
 
