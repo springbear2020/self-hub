@@ -3,6 +3,10 @@
   import CalendarHeatmap from './components/CalendarHeatmap.vue'
   import { getDailyTaskStatList } from '@/api/task/daily_task_completion'
 
+  defineOptions({
+    name: 'DailyTaskStat'
+  })
+
   const list = ref([])
   const noMore = ref(false)
   const loading = ref(false)

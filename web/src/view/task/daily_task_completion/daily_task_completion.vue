@@ -42,9 +42,10 @@
     <!-- 表格 -->
     <div class="gva-table-box">
       <div class="gva-btn-list">
-        <el-button type="primary" icon="plus" @click="openDialog()"
-          >新增
+        <el-button type="primary" icon="CirclePlus" @click="handleToday"
+          >今日
         </el-button>
+        <el-button icon="plus" @click="openDialog()">新增</el-button>
         <el-button
           icon="delete"
           style="margin-left: 10px"
@@ -231,6 +232,13 @@
         </el-descriptions-item>
       </el-descriptions>
     </el-drawer>
+
+    <!-- 批量新增 -->
+    <task-completion-dialog
+      ref="completionRef"
+      :daily-tasks="dailyTaskList"
+      @refresh="getTableData"
+    />
   </div>
 </template>
 
@@ -249,10 +257,16 @@
   import { ref, reactive, onMounted, computed } from 'vue'
   import { useAppStore } from '@/pinia'
   import { InfoFilled } from '@element-plus/icons-vue'
+  import TaskCompletionDialog from './components/TaskCompletionDialog.vue'
 
   defineOptions({
     name: 'DailyTaskCompletion'
   })
+
+  const completionRef = ref()
+  const handleToday = () => {
+    completionRef.value.openDialog()
+  }
 
   // 提交按钮
   const btnLoading = ref(false)
@@ -270,7 +284,7 @@
       (item) => item.id === formData.value.taskId
     )
     const { minValue = 1, maxValue = 100 } = target || {}
-    return [ minValue, maxValue ]
+    return [minValue, maxValue]
   })
 
   // 验证规则

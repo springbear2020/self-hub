@@ -3,6 +3,10 @@
   import LazyWrapper from '@/components/LazyWrapper.vue'
   import { formatDate } from '@/utils/format'
 
+  defineOptions({
+    name: 'MiserStat'
+  })
+
   // 月份选择框
   const minYear = 2023
   const minMonth = 7
