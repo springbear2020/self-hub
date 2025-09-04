@@ -7,6 +7,7 @@ type RouterGroup struct {
 	MiserTransactionRouter
 	MiserTransactionItemRouter
 	MiserStatRouter
+	MiserLoanRecordRouter
 }
 
 var (
@@ -14,4 +15,5 @@ var (
 	miserTransactionApi     = api.ApiGroupApp.MiserApiGroup.MiserTransactionApi
 	miserTransactionItemApi = api.ApiGroupApp.MiserApiGroup.MiserTransactionItemApi
 	miserStatApi            = api.ApiGroupApp.MiserApiGroup.MiserStatApi
+	miserLoanRecordApi      = api.ApiGroupApp.MiserApiGroup.MiserLoanRecordApi
 )

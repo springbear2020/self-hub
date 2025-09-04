@@ -482,7 +482,7 @@
       let res
       switch (type.value) {
         case 'create':
-          res = await createDailyTaskCompletion(formData.value)
+          res = await createDailyTaskCompletion([formData.value])
           break
         case 'update':
           res = await updateDailyTaskCompletion(formData.value)

@@ -1,5 +1,10 @@
 <template>
   <div>
+    <!-- 统计卡片 -->
+    <div class="card-stat-box">
+      <loan-card-stat ref="cardStatRef" />
+    </div>
+
     <!-- 搜索框 -->
     <div class="gva-search-box">
       <el-form
@@ -9,33 +14,48 @@
         class="demo-form-inline"
         @keyup.enter="onSubmit"
       >
-        <el-form-item label="交易分类" prop="categoryId">
-          <el-select v-model="searchInfo.categoryId">
+        <el-form-item label="借还对象" prop="name">
+          <el-select
+            v-model="searchInfo.name"
+            allow-create
+            filterable
+            default-first-option
+            placeholder="借还对象"
+          >
             <el-option
-              v-for="c in categoryList"
-              :label="c.name"
-              :value="c.id"
-              :key="c.id"
+              v-for="name in distinctNames"
+              :key="name"
+              :label="name"
+              :value="name"
             />
           </el-select>
         </el-form-item>
 
-        <el-form-item label="交易类型" prop="transactionType">
-          <el-select v-model="searchInfo.transactionType">
+        <el-form-item label="资金状态" prop="fundStatus">
+          <el-select v-model="searchInfo.fundStatus">
             <el-option
-              v-for="t in transactionTypeList"
-              :label="t.label"
-              :value="t.value"
-              :key="t.value"
+              v-for="{ value, label } in loanStatusList"
+              :key="value"
+              :label="label"
+              :value="value"
             />
           </el-select>
         </el-form-item>
 
-        <el-form-item label="交易日期" prop="date">
+        <el-form-item label="借出日期" prop="lendDate">
           <el-date-picker
-            v-model="searchInfo.date"
+            v-model="searchInfo.lendDate"
             type="date"
-            placeholder="选择日期"
+            placeholder="请选择"
+            :disabled-date="disabledDate"
+          />
+        </el-form-item>
+
+        <el-form-item label="归还日期" prop="repayDate">
+          <el-date-picker
+            v-model="searchInfo.repayDate"
+            type="date"
+            placeholder="请选择"
             :disabled-date="disabledDate"
           />
         </el-form-item>
@@ -52,23 +72,20 @@
     <!-- 表格 -->
     <div class="gva-table-box">
       <div class="gva-btn-list">
-        <el-button
-          type="primary"
-          icon="circle-plus"
-          @click="handleTransactionsBatch"
-          >流水
+        <el-button type="primary" icon="CirclePlus" @click="handleLoan()"
+          >借出
         </el-button>
-        <el-button icon="plus" @click="openDialog()">新增</el-button>
+        <el-button icon="Plus" @click="openDialog()">新增</el-button>
         <el-button
           icon="delete"
           style="margin-left: 10px"
           :disabled="!multipleSelection.length"
           @click="onDelete"
-          type="danger"
         >
           删除
         </el-button>
       </div>
+
       <el-table
         ref="multipleTable"
         style="width: 100%"
@@ -81,24 +98,29 @@
 
         <el-table-column align="left" label="ID" prop="id" width="110" />
 
-        <el-table-column align="left" label="交易分类" prop="categoryId">
+        <el-table-column align="left" label="借还对象" prop="name" />
+
+        <el-table-column align="left" label="借出日期" prop="lendDate">
+          <template #default="scope"
+            >{{ formatDate(scope.row.lendDate, 'yyyy-MM-dd') }}
+          </template>
+        </el-table-column>
+        <el-table-column align="left" label="借出金额" prop="lendAmount" />
+
+        <el-table-column align="left" label="资金状态" prop="fundStatus">
           <template #default="{ row }">
-            {{ categoryMap[row.categoryId] }}
+            <el-tag :type="loanStatusMap[row.fundStatus]?.color"
+              >{{ loanStatusMap[row.fundStatus]?.label }}
+            </el-tag>
           </template>
         </el-table-column>
 
-        <el-table-column align="left" label="交易类型" prop="transactionType">
-          <template #default="{ row }">
-            {{ transactionTypeMap[row.transactionType] }}
+        <el-table-column align="left" label="归还日期" prop="repayDate">
+          <template #default="scope"
+            >{{ formatDate(scope.row.repayDate, 'yyyy-MM-dd') }}
           </template>
         </el-table-column>
-
-        <el-table-column align="left" label="交易日期" prop="date">
-          <template #default="{ row }"
-            >{{ formatDate(row.date, 'yyyy-MM-dd') }}
-          </template>
-        </el-table-column>
-        <el-table-column align="left" label="交易金额" prop="amount" />
+        <el-table-column align="left" label="归还金额" prop="repayAmount" />
 
         <el-table-column
           align="left"
@@ -110,13 +132,11 @@
             <el-button
               type="primary"
               link
+              icon="CirclePlus"
               class="table-button"
-              @click="handleItemsBatch(scope.row)"
-            >
-              <el-icon style="margin-right: 5px">
-                <CirclePlus />
-              </el-icon>
-              明细
+              @click="handleRepay(scope.row)"
+              :disabled="scope.row.fundStatus === LOAN_FUND_STATUS_REPAID"
+              >归还
             </el-button>
             <el-button
               type="info"
@@ -134,7 +154,7 @@
               link
               icon="edit"
               class="table-button"
-              @click="updateMiserTransactionFunc(scope.row)"
+              @click="updateMiserLoanRecordFunc(scope.row)"
               >编辑
             </el-button>
             <el-button
@@ -147,6 +167,7 @@
           </template>
         </el-table-column>
       </el-table>
+
       <div class="gva-pagination">
         <el-pagination
           layout="total, sizes, prev, pager, next, jumper"
@@ -170,7 +191,7 @@
     >
       <template #header>
         <div class="flex justify-between items-center">
-          <span class="text-lg">{{ type === 'create' ? '新增' : '编辑' }}</span>
+          <span class="text-lg">{{ drawerTitle }}</span>
           <div>
             <el-button :loading="btnLoading" type="primary" @click="enterDialog"
               >确 定
@@ -187,47 +208,85 @@
         :rules="rule"
         label-width="80px"
       >
-        <el-form-item label="交易分类" prop="categoryId">
+        <el-form-item label="借还对象" prop="name">
           <el-select
-            v-model="formData.categoryId"
-            @change="handleCategoryChange"
+            v-model="formData.name"
+            allow-create
+            filterable
+            default-first-option
+            placeholder="请输入借还对象"
+            :disabled="!renderLoanItem"
           >
             <el-option
-              v-for="c in categoryList"
-              :key="c.id"
-              :label="c.name"
-              :value="c.id"
+              v-for="name in distinctNames"
+              :key="name"
+              :label="name"
+              :value="name"
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="交易类型" prop="transactionType">
-          <el-select v-model="formData.transactionType" disabled>
-            <el-option
-              v-for="t in transactionTypeList"
-              :label="t.label"
-              :value="t.value"
-              :key="t.value"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="交易日期" prop="date">
+        <el-form-item label="借出日期" prop="lendDate">
           <el-date-picker
-            v-model="formData.date"
+            v-model="formData.lendDate"
             type="date"
             style="width: 100%"
             placeholder="选择日期"
             :clearable="false"
             :disabled-date="disabledDate"
+            :disabled="!renderLoanItem"
           />
         </el-form-item>
-        <el-form-item label="交易金额" prop="amount">
+        <el-form-item label="借出金额" prop="lendAmount">
           <el-input-number
-            v-model="formData.amount"
+            v-model="formData.lendAmount"
             style="width: 100%"
+            :min="0"
             :precision="2"
-            :clearable="true"
-            placeholder="请输入交易金额"
+            placeholder="借出金额"
+            :disabled="!renderLoanItem"
           />
+        </el-form-item>
+        <el-form-item label="借还说明" prop="description">
+          <el-input
+            v-model="formData.description"
+            type="textarea"
+            placeholder="请输入借还说明"
+            maxlength="500"
+            show-word-limit
+            autosize
+          />
+        </el-form-item>
+        <el-form-item label="归还日期" prop="repayDate">
+          <el-date-picker
+            v-model="formData.repayDate"
+            type="date"
+            style="width: 100%"
+            placeholder="选择日期"
+            :clearable="false"
+            :disabled-date="disabledDate"
+            :disabled="!renderRepayItem"
+          />
+        </el-form-item>
+        <el-form-item label="归还金额" prop="repayAmount">
+          <el-input-number
+            v-model="formData.repayAmount"
+            style="width: 100%"
+            :min="0"
+            :max="formData.lendAmount"
+            :precision="2"
+            :disabled="!renderRepayItem"
+            @blur="handleBlur"
+          />
+        </el-form-item>
+        <el-form-item label="资金状态" prop="fundStatus">
+          <el-select v-model="formData.fundStatus" disabled>
+            <el-option
+              v-for="{ value, label } in loanStatusList"
+              :key="value"
+              :label="label"
+              :value="value"
+            />
+          </el-select>
         </el-form-item>
       </el-form>
     </el-drawer>
@@ -239,7 +298,7 @@
       v-model="detailShow"
       :show-close="true"
       :before-close="closeDetailShow"
-      title="查看"
+      title="详情"
     >
       <el-descriptions :column="1" border>
         <el-descriptions-item label="ID">
@@ -248,17 +307,28 @@
         <el-descriptions-item label="UID">
           {{ detailForm.userId }}
         </el-descriptions-item>
-        <el-descriptions-item label="交易分类">
-          {{ categoryMap[detailForm.categoryId] }}
+        <el-descriptions-item label="借还对象">
+          {{ detailForm.name }}
         </el-descriptions-item>
-        <el-descriptions-item label="交易类型">
-          {{ transactionTypeMap[detailForm.transactionType] }}
+        <el-descriptions-item label="借出日期">
+          {{ formatDate(detailForm.lendDate, 'yyyy-MM-dd') }}
         </el-descriptions-item>
-        <el-descriptions-item label="交易日期">
-          {{ formatDate(detailForm.date, 'yyyy-MM-dd') }}
+        <el-descriptions-item label="借出金额">
+          {{ detailForm.lendAmount }}
         </el-descriptions-item>
-        <el-descriptions-item label="交易金额">
-          {{ detailForm.amount }}
+        <el-descriptions-item label="归还日期">
+          {{ formatDate(detailForm.repayDate, 'yyyy-MM-dd') }}
+        </el-descriptions-item>
+        <el-descriptions-item label="归还金额">
+          {{ detailForm.repayAmount }}
+        </el-descriptions-item>
+        <el-descriptions-item label="借还说明">
+          <multiline-text :text="detailForm.description" />
+        </el-descriptions-item>
+        <el-descriptions-item label="资金状态">
+          <el-tag :type="loanStatusMap[detailForm.fundStatus]?.color"
+            >{{ loanStatusMap[detailForm.fundStatus]?.label }}
+          </el-tag>
         </el-descriptions-item>
         <el-descriptions-item label="创建时间">
           {{ formatDate(detailForm.createdAt) }}
@@ -268,42 +338,36 @@
         </el-descriptions-item>
       </el-descriptions>
     </el-drawer>
-
-    <transaction-dialog
-      ref="transactionDialogRef"
-      :typed-category-map="typedCategoryMap"
-      :transaction-type-map="transactionTypeMap"
-      :grouped-category-map="groupedCategoryMap"
-      @closed="handleDialogClosed"
-    />
-    <transaction-items-dialog
-      ref="transactionItemsDialogRef"
-      :category-map="categoryMap"
-    />
   </div>
 </template>
 
 <script setup>
+  import {
+    createMiserLoanRecord,
+    deleteMiserLoanRecord,
+    deleteMiserLoanRecordByIds,
+    updateMiserLoanRecord,
+    findMiserLoanRecord,
+    getMiserLoanRecordList,
+    listMiserLoanNameList
+  } from '@/api/miser/miser_loan_record'
   import { formatDate, getDictFunc } from '@/utils/format'
   import { ElMessage, ElMessageBox } from 'element-plus'
-  import { ref, reactive, computed, onMounted } from 'vue'
+  import { ref, reactive, computed, onMounted, watch } from 'vue'
   import { useAppStore } from '@/pinia'
-  import { CirclePlus, InfoFilled } from '@element-plus/icons-vue'
-  import { listMiserCategoryList } from '@/api/miser/miser_category'
-  import {
-    createMiserTransaction,
-    deleteMiserTransaction,
-    deleteMiserTransactionByIds,
-    updateMiserTransaction,
-    findMiserTransaction,
-    getMiserTransactionList
-  } from '@/api/miser/miser_transaction'
-  import TransactionDialog from '@/view/miser/miser_transaction/components/TransactionDialog.vue'
-  import TransactionItemsDialog from '@/view/miser/miser_transaction/components/TransactionItemsDialog.vue'
+  import { InfoFilled } from '@element-plus/icons-vue'
+  import MultilineText from '@/components/MultilineText.vue'
+  import LoanCardStat from '@/view/miser/miser_loan_record/components/LoanCardStat.vue'
 
   defineOptions({
-    name: 'MiserTransaction'
+    name: 'MiserLoanRecord'
   })
+
+  const cardStatRef = ref()
+
+  const LOAN_FUND_STATUS_LOAN = 1 // 待还款
+  const LOAN_FUND_STATUS_REPAYING = 2 // 部分还
+  const LOAN_FUND_STATUS_REPAID = 3 // 已结清
 
   // 提交按钮loading
   const btnLoading = ref(false)
@@ -311,36 +375,72 @@
 
   // 自动化生成的字典（可能为空）以及字段
   const formData = ref({
-    categoryId: undefined,
-    transactionType: undefined,
-    date: new Date(),
-    amount: undefined
+    name: '',
+    lendDate: new Date(),
+    lendAmount: null,
+    repayDate: new Date(),
+    repayAmount: 0,
+    description: '',
+    fundStatus: 1
   })
+
+  const disabledDate = (time) => {
+    return time.getTime() > Date.now()
+  }
+  const handleBlur = () => {
+    const { lendAmount, repayAmount } = formData.value
+    const diff = repayAmount - lendAmount
+    if (diff === 0) {
+      formData.value.fundStatus = LOAN_FUND_STATUS_REPAID
+    } else if (diff < 0) {
+      formData.value.fundStatus = LOAN_FUND_STATUS_REPAYING
+    } else {
+      // NOTE 此为非法状态（归还金额比借出金额多），置为待还款
+      formData.value.fundStatus = LOAN_FUND_STATUS_LOAN
+    }
+  }
 
   // 验证规则
   const rule = reactive({
-    categoryId: [
+    name: [
+      {
+        required: true,
+        message: '',
+        trigger: ['input', 'blur']
+      },
+      {
+        whitespace: true,
+        message: '不能只输入空格',
+        trigger: ['input', 'blur']
+      }
+    ],
+    lendDate: [
       {
         required: true,
         message: '',
         trigger: ['input', 'blur']
       }
     ],
-    transactionType: [
+    lendAmount: [
       {
         required: true,
         message: '',
         trigger: ['input', 'blur']
       }
     ],
-    date: [
+    description: [
       {
         required: true,
         message: '',
         trigger: ['input', 'blur']
+      },
+      {
+        whitespace: true,
+        message: '不能只输入空格',
+        trigger: ['input', 'blur']
       }
     ],
-    amount: [
+    fundStatus: [
       {
         required: true,
         message: '',
@@ -351,15 +451,6 @@
 
   const elFormRef = ref()
   const elSearchFormRef = ref()
-  const disabledDate = (time) => {
-    return time.getTime() > Date.now()
-  }
-  const handleCategoryChange = (value) => {
-    const { transactionType } = categoryList.value.find(
-      ({ id }) => id === value
-    )
-    formData.value.transactionType = transactionType
-  }
 
   // =========== 表格控制部分 ===========
   const page = ref(1)
@@ -396,7 +487,7 @@
 
   // 查询
   const getTableData = async () => {
-    const table = await getMiserTransactionList({
+    const table = await getMiserLoanRecordList({
       page: page.value,
       pageSize: pageSize.value,
       ...searchInfo.value
@@ -428,13 +519,13 @@
 
   // 删除行
   const deleteRow = (row) => {
-    const tip = `确定要删除『${categoryMap.value[row.categoryId]}/${formatDate(row.date, 'yyyy-MM-dd')}』吗？`
+    const tip = `确定要删除『${row.name}』吗？`
     ElMessageBox.confirm(tip, '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'
     }).then(() => {
-      deleteMiserTransactionFunc(row)
+      deleteMiserLoanRecordFunc(row)
     })
   }
 
@@ -457,7 +548,7 @@
         multipleSelection.value.map((item) => {
           ids.push(item.id)
         })
-      const res = await deleteMiserTransactionByIds({ ids })
+      const res = await deleteMiserLoanRecordByIds({ ids })
       if (res.code === 0) {
         ElMessage({
           type: 'success',
@@ -467,16 +558,37 @@
           page.value--
         }
         await getTableData()
+        await cardStatRef.value.fetchAndRender()
       }
     })
   }
 
   // 行为控制标记（弹窗内部需要增还是改）
   const type = ref('')
+  const renderLoanItem = computed(() => {
+    return type.value !== 'repay'
+  })
+  const renderRepayItem = computed(() => {
+    return type.value !== 'loan'
+  })
+  const drawerTitle = computed(() => {
+    switch (type.value) {
+      case 'create':
+        return '新增'
+      case 'update':
+        return '编辑'
+      case 'loan':
+        return '借出'
+      case 'repay':
+        return '归还'
+      default:
+        return '未知'
+    }
+  })
 
   // 更新行
-  const updateMiserTransactionFunc = async (row) => {
-    const res = await findMiserTransaction({ id: row.id })
+  const updateMiserLoanRecordFunc = async (row) => {
+    const res = await findMiserLoanRecord({ id: row.id })
     type.value = 'update'
     if (res.code === 0) {
       formData.value = res.data
@@ -484,9 +596,19 @@
     }
   }
 
+  // 资金归还
+  const handleRepay = async (row) => {
+    type.value = 'repay'
+    const res = await findMiserLoanRecord({ id: row.id })
+    if (res.code === 0) {
+      formData.value = res.data
+      dialogFormVisible.value = true
+    }
+  }
+
   // 删除行
-  const deleteMiserTransactionFunc = async (row) => {
-    const res = await deleteMiserTransaction({ id: row.id })
+  const deleteMiserLoanRecordFunc = async (row) => {
+    const res = await deleteMiserLoanRecord({ id: row.id })
     if (res.code === 0) {
       ElMessage({
         type: 'success',
@@ -496,6 +618,7 @@
         page.value--
       }
       await getTableData()
+      await cardStatRef.value.fetchAndRender()
     }
   }
 
@@ -508,14 +631,22 @@
     dialogFormVisible.value = true
   }
 
+  const handleLoan = () => {
+    type.value = 'loan'
+    dialogFormVisible.value = true
+  }
+
   // 关闭弹窗
   const closeDialog = () => {
     dialogFormVisible.value = false
     formData.value = {
-      categoryId: undefined,
-      transactionType: undefined,
-      date: new Date(),
-      amount: undefined
+      name: '',
+      lendDate: new Date(),
+      lendAmount: null,
+      repayDate: new Date(),
+      repayAmount: 0,
+      description: '',
+      fundStatus: 1
     }
   }
   // 弹窗确定
@@ -525,14 +656,20 @@
       if (!valid) return (btnLoading.value = false)
       let res
       switch (type.value) {
+        case 'loan':
+          res = await createMiserLoanRecord(formData.value)
+          break
         case 'create':
-          res = await createMiserTransaction([formData.value])
+          res = await createMiserLoanRecord(formData.value)
+          break
+        case 'repay':
+          res = await updateMiserLoanRecord(formData.value)
           break
         case 'update':
-          res = await updateMiserTransaction(formData.value)
+          res = await updateMiserLoanRecord(formData.value)
           break
         default:
-          res = await createMiserTransaction(formData.value)
+          res = await createMiserLoanRecord(formData.value)
           break
       }
       btnLoading.value = false
@@ -543,6 +680,7 @@
         })
         closeDialog()
         await getTableData()
+        await cardStatRef.value.fetchAndRender()
       }
     })
   }
@@ -560,7 +698,7 @@
   // 打开详情
   const getDetails = async (row) => {
     // 打开弹窗
-    const res = await findMiserTransaction({ id: row.id })
+    const res = await findMiserLoanRecord({ id: row.id })
     if (res.code === 0) {
       detailForm.value = res.data
       openDetailShow()
@@ -573,80 +711,55 @@
     detailForm.value = {}
   }
 
-  // 交易类型
-  const transactionTypeList = ref([])
-  const transactionTypeMap = computed(() => {
+  // 借还资金状态
+  const loanStatusList = ref([])
+  const loanStatusMap = computed(() => {
     const resultMap = {}
-    transactionTypeList.value.forEach(({ value, label }) => {
-      resultMap[value] = label
+    loanStatusList.value.forEach(({ value, label, extend }) => {
+      resultMap[value] = {
+        label: label,
+        color: extend
+      }
     })
     return resultMap
   })
-  const fetchTransactionTypeList = async () => {
-    const dataList = await getDictFunc('miser_transaction_type')
-    transactionTypeList.value = dataList.map(({ value, label }) => {
+  const fetchLoadStatusList = async () => {
+    const dataList = await getDictFunc('miser_loan_fund_status')
+    loanStatusList.value = dataList.map(({ value, label, extend }) => {
       return {
         label: label,
-        value: parseInt(value)
+        value: parseInt(value),
+        extend: extend
       }
     })
   }
 
-  // 分类列表
-  const categoryList = ref([])
-  const { categoryMap, typedCategoryMap, groupedCategoryMap } = (() => {
-    // {categoryId: categoryName}
-    const categoryMap = computed(() =>
-      categoryList.value.reduce((map, { id, name }) => {
-        map[id] = name
-        return map
-      }, {})
-    )
-    // {categoryId: transactionType}
-    const typedCategoryMap = computed(() =>
-      categoryList.value.reduce((map, { id, transactionType }) => {
-        map[id] = transactionType
-        return map
-      }, {})
-    )
-    // {transactionType: categoryArray}
-    const groupedCategoryMap = computed(() =>
-      categoryList.value.reduce((map, item) => {
-        const { id, name, sort, transactionType } = item
-        if (!map[transactionType]) {
-          map[transactionType] = []
-        }
-        map[transactionType].push({ id, name, sort, transactionType })
-        return map
-      }, {})
-    )
-    return { categoryMap, typedCategoryMap, groupedCategoryMap }
-  })()
-  const fetchCategoryList = async () => {
-    const { code, data } = await listMiserCategoryList()
+  // 借还对象列表
+  const distinctNames = ref([])
+  const fetchDistinctNameList = async () => {
+    const { code, data } = await listMiserLoanNameList()
     if (code === 0 && data && data.length > 0) {
-      categoryList.value = data
+      distinctNames.value = data
     } else {
-      categoryList.value = []
+      distinctNames.value = []
     }
   }
 
-  // 批量新增交易流水
-  const transactionDialogRef = ref()
-  const handleTransactionsBatch = () => {
-    transactionDialogRef.value.openDialog()
-  }
-  const handleDialogClosed = async () => {
-    await getTableData()
-  }
-  // 批量新增流水明细
-  const transactionItemsDialogRef = ref()
-  const handleItemsBatch = (row) => {
-    transactionItemsDialogRef.value.openDialog(row)
-  }
+  watch(
+    total,
+    async () => {
+      await fetchDistinctNameList()
+    },
+    { immediate: true }
+  )
 
   onMounted(() => {
-    fetchTransactionTypeList()
-    fetchCategoryList()
+    fetchLoadStatusList()
   })
 </script>
+
+<style lang="scss" scoped>
+  .card-stat-box {
+    margin-top: 8px;
+  }
+</style>

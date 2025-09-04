@@ -20,7 +20,7 @@
   const todayStr = formatDate(today, 'yyyy-MM-dd')
 
   const handleSubmit = async () => {
-    const { code } = await createDailyTaskCompletion(formData.value)
+    const { code } = await createDailyTaskCompletion([formData.value])
     if (code === 0) {
       ElMessage.success('任务完成情况已保存')
       showForm.value = false

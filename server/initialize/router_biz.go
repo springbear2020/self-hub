@@ -28,5 +28,6 @@ func initBizRouter(routers ...*gin.RouterGroup) {
 		miserRouter.InitMiserTransactionRouter(privateGroup, publicGroup)
 		miserRouter.InitMiserTransactionItemRouter(privateGroup, publicGroup)
 		miserRouter.InitMiserStatRouter(privateGroup, publicGroup)
+		miserRouter.InitMiserLoanRecordRouter(privateGroup, publicGroup)
 	}
 }

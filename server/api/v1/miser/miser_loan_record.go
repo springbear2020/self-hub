@@ -1,27 +1,27 @@
-package task
+package miser
 
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/springbear2020/self-hub/server/global"
 	"github.com/springbear2020/self-hub/server/model/common/response"
-	"github.com/springbear2020/self-hub/server/model/task"
-	"github.com/springbear2020/self-hub/server/model/task/request"
+	"github.com/springbear2020/self-hub/server/model/miser"
+	"github.com/springbear2020/self-hub/server/model/miser/request"
 	"github.com/springbear2020/self-hub/server/utils"
 	"go.uber.org/zap"
 )
 
-type DailyTaskCompletionApi struct{}
+type MiserLoanRecordApi struct{}
 
-func (taskCompletionApi *DailyTaskCompletionApi) CreateDailyTaskCompletion(c *gin.Context) {
-	var taskCompletion []task.DailyTaskCompletion
-	err := c.ShouldBindJSON(&taskCompletion)
+func (miserLoanRecordApi *MiserLoanRecordApi) CreateMiserLoanRecord(c *gin.Context) {
+	var miserLoanRecord miser.MiserLoanRecord
+	err := c.ShouldBindJSON(&miserLoanRecord)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
 
 	uid := utils.GetUserID(c)
-	err = dailyTaskCompletionService.CreateDailyTaskCompletion(uid, taskCompletion)
+	err = miserLoanRecordService.CreateMiserLoanRecord(uid, &miserLoanRecord)
 	if err != nil {
 		global.GVA_LOG.Error("创建失败!", zap.Error(err))
 		response.FailWithMessage("创建失败:"+err.Error(), c)
@@ -31,10 +31,10 @@ func (taskCompletionApi *DailyTaskCompletionApi) CreateDailyTaskCompletion(c *gi
 	response.OkWithMessage("创建成功", c)
 }
 
-func (taskCompletionApi *DailyTaskCompletionApi) DeleteDailyTaskCompletion(c *gin.Context) {
+func (miserLoanRecordApi *MiserLoanRecordApi) DeleteMiserLoanRecord(c *gin.Context) {
 	id := c.Query("id")
 	uid := utils.GetUserID(c)
-	err := dailyTaskCompletionService.DeleteDailyTaskCompletion(uid, id)
+	err := miserLoanRecordService.DeleteMiserLoanRecord(uid, id)
 	if err != nil {
 		global.GVA_LOG.Error("删除失败!", zap.Error(err))
 		response.FailWithMessage("删除失败:"+err.Error(), c)
@@ -44,10 +44,10 @@ func (taskCompletionApi *DailyTaskCompletionApi) DeleteDailyTaskCompletion(c *gi
 	response.OkWithMessage("删除成功", c)
 }
 
-func (taskCompletionApi *DailyTaskCompletionApi) DeleteDailyTaskCompletionByIds(c *gin.Context) {
+func (miserLoanRecordApi *MiserLoanRecordApi) DeleteMiserLoanRecordByIds(c *gin.Context) {
 	ids := c.QueryArray("ids[]")
 	uid := utils.GetUserID(c)
-	err := dailyTaskCompletionService.DeleteDailyTaskCompletionByIds(uid, ids)
+	err := miserLoanRecordService.DeleteMiserLoanRecordByIds(uid, ids)
 	if err != nil {
 		global.GVA_LOG.Error("批量删除失败!", zap.Error(err))
 		response.FailWithMessage("批量删除失败:"+err.Error(), c)
@@ -57,16 +57,16 @@ func (taskCompletionApi *DailyTaskCompletionApi) DeleteDailyTaskCompletionByIds(
 	response.OkWithMessage("批量删除成功", c)
 }
 
-func (taskCompletionApi *DailyTaskCompletionApi) UpdateDailyTaskCompletion(c *gin.Context) {
-	var taskCompletion task.DailyTaskCompletion
-	err := c.ShouldBindJSON(&taskCompletion)
+func (miserLoanRecordApi *MiserLoanRecordApi) UpdateMiserLoanRecord(c *gin.Context) {
+	var miserLoanRecord miser.MiserLoanRecord
+	err := c.ShouldBindJSON(&miserLoanRecord)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
 
 	uid := utils.GetUserID(c)
-	err = dailyTaskCompletionService.UpdateDailyTaskCompletion(uid, taskCompletion)
+	err = miserLoanRecordService.UpdateMiserLoanRecord(uid, miserLoanRecord)
 	if err != nil {
 		global.GVA_LOG.Error("更新失败!", zap.Error(err))
 		response.FailWithMessage("更新失败:"+err.Error(), c)
@@ -76,21 +76,21 @@ func (taskCompletionApi *DailyTaskCompletionApi) UpdateDailyTaskCompletion(c *gi
 	response.OkWithMessage("更新成功", c)
 }
 
-func (taskCompletionApi *DailyTaskCompletionApi) FindDailyTaskCompletion(c *gin.Context) {
+func (miserLoanRecordApi *MiserLoanRecordApi) FindMiserLoanRecord(c *gin.Context) {
 	id := c.Query("id")
 	uid := utils.GetUserID(c)
-	taskCompletion, err := dailyTaskCompletionService.GetDailyTaskCompletion(uid, id)
+	miserLoanRecord, err := miserLoanRecordService.GetMiserLoanRecord(uid, id)
 	if err != nil {
 		global.GVA_LOG.Error("查询失败!", zap.Error(err))
 		response.FailWithMessage("查询失败:"+err.Error(), c)
 		return
 	}
 
-	response.OkWithData(taskCompletion, c)
+	response.OkWithData(miserLoanRecord, c)
 }
 
-func (taskCompletionApi *DailyTaskCompletionApi) GetDailyTaskCompletionList(c *gin.Context) {
-	var pageInfo request.DailyTaskCompletionSearch
+func (miserLoanRecordApi *MiserLoanRecordApi) GetMiserLoanRecordList(c *gin.Context) {
+	var pageInfo request.MiserLoanRecordSearch
 	err := c.ShouldBindQuery(&pageInfo)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
@@ -98,7 +98,7 @@ func (taskCompletionApi *DailyTaskCompletionApi) GetDailyTaskCompletionList(c *g
 	}
 
 	uid := utils.GetUserID(c)
-	list, total, err := dailyTaskCompletionService.GetDailyTaskCompletionInfoList(uid, pageInfo)
+	list, total, err := miserLoanRecordService.GetMiserLoanRecordInfoList(uid, pageInfo)
 	if err != nil {
 		global.GVA_LOG.Error("获取失败!", zap.Error(err))
 		response.FailWithMessage("获取失败:"+err.Error(), c)
@@ -113,26 +113,26 @@ func (taskCompletionApi *DailyTaskCompletionApi) GetDailyTaskCompletionList(c *g
 	}, "获取成功", c)
 }
 
-func (taskCompletionApi *DailyTaskCompletionApi) GetDailyTaskStatList(c *gin.Context) {
-	var pageInfo request.DailyTaskStat
-	err := c.ShouldBindQuery(&pageInfo)
-	if err != nil {
-		response.FailWithMessage(err.Error(), c)
-		return
-	}
-
+func (miserLoanRecordApi *MiserLoanRecordApi) ListMiserLoanNameList(c *gin.Context) {
 	uid := utils.GetUserID(c)
-	list, total, err := dailyTaskCompletionService.GetDailyTaskStatInfoList(uid, pageInfo)
+	list, err := miserLoanRecordService.ListMiserLoanNameList(uid)
 	if err != nil {
-		global.GVA_LOG.Error("获取失败!", zap.Error(err))
-		response.FailWithMessage("获取失败:"+err.Error(), c)
+		global.GVA_LOG.Error("查询失败!", zap.Error(err))
+		response.FailWithMessage("查询失败:"+err.Error(), c)
 		return
 	}
 
-	response.OkWithDetailed(response.PageResult{
-		List:     list,
-		Total:    total,
-		Page:     pageInfo.Page,
-		PageSize: pageInfo.PageSize,
-	}, "获取成功", c)
+	response.OkWithData(list, c)
+}
+
+func (miserLoanRecordApi *MiserLoanRecordApi) GetMiserLoanStatData(c *gin.Context) {
+	uid := utils.GetUserID(c)
+	data, err := miserLoanRecordService.GetMiserLoanStatData(uid)
+	if err != nil {
+		global.GVA_LOG.Error("查询失败!", zap.Error(err))
+		response.FailWithMessage("查询失败:"+err.Error(), c)
+		return
+	}
+
+	response.OkWithData(data, c)
 }

@@ -5,4 +5,5 @@ type ServiceGroup struct {
 	MiserTransactionService
 	MiserTransactionItemService
 	MiserStatService
+	MiserLoanRecordService
 }

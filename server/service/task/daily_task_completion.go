@@ -1,7 +1,6 @@
 package task
 
 import (
-	"fmt"
 	"github.com/springbear2020/self-hub/server/global"
 	"github.com/springbear2020/self-hub/server/model/task"
 	"github.com/springbear2020/self-hub/server/model/task/request"
@@ -12,18 +11,11 @@ type DailyTaskCompletionService struct{}
 
 var dailyTaskService = new(DailyTaskService)
 
-func (taskCompletionService *DailyTaskCompletionService) CreateDailyTaskCompletion(uid uint, taskCompletion *task.DailyTaskCompletion) (err error) {
-	taskIdStr := fmt.Sprintf("%d", *taskCompletion.TaskId)
-	dailyTask, err := dailyTaskService.GetDailyTask(uid, taskIdStr)
-	if err != nil {
-		return err
+func (taskCompletionService *DailyTaskCompletionService) CreateDailyTaskCompletion(uid uint, taskCompletions []task.DailyTaskCompletion) (err error) {
+	for i := range taskCompletions {
+		taskCompletions[i].UserId = uid
 	}
-	if !(*dailyTask.MinValue <= *taskCompletion.CountValue && *taskCompletion.CountValue <= *dailyTask.MaxValue) {
-		return fmt.Errorf("任务完成计数值数值范围非法")
-	}
-
-	taskCompletion.UserId = uid
-	err = global.GVA_DB.Create(taskCompletion).Error
+	err = global.GVA_DB.Create(taskCompletions).Error
 	return err
 }
 
