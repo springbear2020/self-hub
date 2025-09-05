@@ -65,27 +65,22 @@
         row-key="id"
         @selection-change="handleSelectionChange"
       >
-        <el-table-column type="selection" width="55" />
-        <el-table-column align="left" label="ID" prop="id" width="110" />
-        <el-table-column align="left" label="任务名称" prop="taskId">
+        <el-table-column align="center" type="selection" width="55" />
+        <el-table-column align="center" label="ID" prop="id" width="55" />
+        <el-table-column align="center" label="任务名称" prop="taskId">
           <template #default="{ row }"
             >{{ dailyTaskMap[row.taskId] }}
           </template>
         </el-table-column>
-        <el-table-column align="left" label="完成日期" prop="finishDate">
+        <el-table-column align="center" label="完成日期" prop="finishDate">
           <template #default="scope"
             >{{ formatDate(scope.row.finishDate, 'yyyy-MM-dd') }}
           </template>
         </el-table-column>
-        <el-table-column align="left" label="计数值" prop="countValue" />
-        <el-table-column align="left" label="完成说明" prop="remark" />
+        <el-table-column align="center" label="计数值" prop="countValue" />
+        <el-table-column align="center" label="完成说明" prop="remark" />
 
-        <el-table-column
-          align="left"
-          label="操作"
-          fixed="right"
-          min-width="200"
-        >
+        <el-table-column align="center" label="操作" fixed="right" width="210">
           <template #default="scope">
             <el-button
               type="info"

@@ -77,35 +77,35 @@
         row-key="id"
         @selection-change="handleSelectionChange"
       >
-        <el-table-column type="selection" width="55" />
+        <el-table-column align="center" type="selection" width="55" />
 
-        <el-table-column align="left" label="ID" prop="id" width="110" />
+        <el-table-column align="center" label="ID" prop="id" width="55" />
 
-        <el-table-column align="left" label="交易分类" prop="categoryId">
+        <el-table-column align="center" label="交易分类" prop="categoryId">
           <template #default="{ row }">
             {{ categoryMap[row.categoryId] }}
           </template>
         </el-table-column>
 
-        <el-table-column align="left" label="交易类型" prop="transactionType">
+        <el-table-column align="center" label="交易类型" prop="transactionType">
           <template #default="{ row }">
             {{ transactionTypeMap[row.transactionType] }}
           </template>
         </el-table-column>
 
-        <el-table-column align="left" label="交易日期" prop="date">
+        <el-table-column align="center" label="交易日期" prop="date">
           <template #default="{ row }"
             >{{ formatDate(row.date, 'yyyy-MM-dd') }}
           </template>
         </el-table-column>
-        <el-table-column align="left" label="交易金额" prop="amount" />
-
         <el-table-column
-          align="left"
-          label="操作"
-          fixed="right"
-          min-width="280px"
-        >
+          align="center"
+          label="交易金额"
+          prop="amount"
+          :formatter="formatterAmount"
+        />
+
+        <el-table-column align="center" label="操作" fixed="right" width="280">
           <template #default="scope">
             <el-button
               type="primary"
@@ -258,7 +258,7 @@
           {{ formatDate(detailForm.date, 'yyyy-MM-dd') }}
         </el-descriptions-item>
         <el-descriptions-item label="交易金额">
-          {{ detailForm.amount }}
+          {{ formatAmount(detailForm.amount) }}
         </el-descriptions-item>
         <el-descriptions-item label="创建时间">
           {{ formatDate(detailForm.createdAt) }}
@@ -284,7 +284,12 @@
 </template>
 
 <script setup>
-  import { formatDate, getDictFunc } from '@/utils/format'
+  import {
+    formatAmount,
+    formatDate,
+    formatterAmount,
+    getDictFunc
+  } from '@/utils/format'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import { ref, reactive, computed, onMounted } from 'vue'
   import { useAppStore } from '@/pinia'

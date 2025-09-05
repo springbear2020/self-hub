@@ -1,6 +1,7 @@
 <script setup>
   import { ref, watch, onMounted } from 'vue'
   import { getMonthStat } from '@/api/miser/miser_stat'
+  import { formatterAmount } from '@/utils/format'
 
   const props = defineProps({
     startMonth: { type: String, required: true },
@@ -43,6 +44,7 @@
           :label="c.label"
           :fixed="c.fixed"
           :sortable="c.sortable"
+          :formatter="formatterAmount"
           align="center"
         />
       </el-table>

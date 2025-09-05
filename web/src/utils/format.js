@@ -9,7 +9,7 @@ export const formatBoolean = (bool) => {
     return ''
   }
 }
-export const formatDate = (time, pattern = "yyyy-MM-dd hh:mm:ss") => {
+export const formatDate = (time, pattern = 'yyyy-MM-dd hh:mm:ss') => {
   if (time !== null && time !== '') {
     var date = new Date(time)
     return formatTimeToStr(date, pattern)
@@ -143,4 +143,17 @@ export const CreateUUID = () => {
     d = Math.floor(d / 16)
     return (c === '0' ? r : (r & 0x3) | 0x8).toString(16)
   })
+}
+
+export const formatAmount = (value) => {
+  let num = Number(value)
+  if (isNaN(num)) {
+    return value
+  }
+
+  return num.toFixed(2)
+}
+
+export const formatterAmount = (row, column, cellValue, rowIndex) => {
+  return column.no === 0 ? cellValue : formatAmount(cellValue)
 }

@@ -34,7 +34,8 @@
 
     chartInstance.setOption({
       tooltip: {
-        trigger: 'axis'
+        trigger: 'axis',
+        valueFormatter: (value) => Number(value).toFixed(2)
       },
       legend: {
         data: ['收入', '支出', '结余'],

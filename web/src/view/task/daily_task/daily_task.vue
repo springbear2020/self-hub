@@ -54,27 +54,22 @@
         row-key="id"
         @selection-change="handleSelectionChange"
       >
-        <el-table-column type="selection" width="55" />
-        <el-table-column align="left" label="ID" prop="id" width="110" />
-        <el-table-column align="left" label="任务名称" prop="name" />
-        <el-table-column align="left" label="任务描述" prop="description" />
-        <el-table-column align="left" label="是否启用" prop="isActive">
+        <el-table-column align="center" type="selection" width="55" />
+        <el-table-column align="center" label="ID" prop="id" width="55" />
+        <el-table-column align="center" label="任务名称" prop="name" />
+        <el-table-column align="center" label="任务描述" prop="description" />
+        <el-table-column align="center" label="是否启用" prop="isActive">
           <template #default="{ row }">
             <assert-tag :active="row.isActive" />
           </template>
         </el-table-column>
-        <el-table-column align="left" label="排序值" prop="sort" />
-        <el-table-column align="left" label="数值范围" prop="minValue">
+        <el-table-column align="center" label="排序值" prop="sort" />
+        <el-table-column align="center" label="数值范围" prop="minValue">
           <template #default="{ row }">
-            <span>[{{ row.minValue }},{{ row.maxValue }}]</span>
+            <span>{{ formatValueRange(row) }}</span>
           </template>
         </el-table-column>
-        <el-table-column
-          align="left"
-          label="操作"
-          fixed="right"
-          min-width="200"
-        >
+        <el-table-column align="center" label="操作" fixed="right" width="210">
           <template #default="scope">
             <el-button
               type="info"
@@ -215,7 +210,7 @@
           {{ detailForm.sort }}
         </el-descriptions-item>
         <el-descriptions-item label="数值范围">
-          <span>[{{ detailForm.minValue }},{{ detailForm.maxValue }}]</span>
+          <span>{{ formatValueRange(detailForm) }}</span>
         </el-descriptions-item>
         <el-descriptions-item label="创建时间">
           {{ formatDate(detailForm.createdAt) }}
@@ -381,6 +376,10 @@
   getTableData()
 
   // ============== 表格控制部分结束 ===============
+
+  const formatValueRange = ({ minValue, maxValue }) => {
+    return `[${minValue},${maxValue}]`
+  }
 
   // 获取需要的字典 可能为空 按需保留
   const setOptions = async () => {}

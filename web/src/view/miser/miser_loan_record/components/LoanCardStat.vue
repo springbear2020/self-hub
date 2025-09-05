@@ -1,5 +1,5 @@
 <script setup>
-  import { markRaw, ref } from 'vue'
+  import { markRaw, nextTick, ref } from 'vue'
   import { Money, TrendCharts, Wallet } from '@element-plus/icons-vue'
   import config from '@/core/config'
   import { getMiserLoanStatData } from '@/api/miser/miser_loan_record'
@@ -30,7 +30,9 @@
     }
   ]
   const fetchAndRender = () => {
-    amountCardRef.value.fetchAndRender()
+    nextTick(() => {
+      amountCardRef.value.fetchAndRender()
+    })
   }
 
   defineExpose({ fetchAndRender })

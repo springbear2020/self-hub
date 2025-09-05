@@ -1,6 +1,7 @@
 <script setup>
   import { ref, watch } from 'vue'
   import { getLineStat, getYearStat } from '@/api/miser/miser_stat'
+  import { formatterAmount } from '@/utils/format'
 
   const props = defineProps({
     startMonth: { type: String, required: true },
@@ -69,6 +70,7 @@
           :key="c.key"
           :prop="c.key"
           :label="c.label"
+          :formatter="formatterAmount"
           sortable
           align="center"
         />

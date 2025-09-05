@@ -10,6 +10,9 @@ import (
 type MiserLoanRecordService struct{}
 
 func (miserLoanRecordService *MiserLoanRecordService) CreateMiserLoanRecord(uid uint, miserLoanRecord *miser.MiserLoanRecord) (err error) {
+	if err = miserLoanRecord.CalculateLoanRecord(); err != nil {
+		return err
+	}
 	miserLoanRecord.UserId = uid
 	err = global.GVA_DB.Create(miserLoanRecord).Error
 	return err
@@ -26,6 +29,9 @@ func (miserLoanRecordService *MiserLoanRecordService) DeleteMiserLoanRecordByIds
 }
 
 func (miserLoanRecordService *MiserLoanRecordService) UpdateMiserLoanRecord(uid uint, miserLoanRecord miser.MiserLoanRecord) (err error) {
+	if err = miserLoanRecord.CalculateLoanRecord(); err != nil {
+		return err
+	}
 	err = global.GVA_DB.Model(&miser.MiserLoanRecord{}).Where("user_id = ? AND id = ?", uid, miserLoanRecord.Id).Updates(&miserLoanRecord).Error
 	return err
 }
@@ -66,7 +72,7 @@ func (miserLoanRecordService *MiserLoanRecordService) GetMiserLoanRecordInfoList
 
 	// 查询记录
 	var miserLoanRecords []miser.MiserLoanRecord
-	err = db.Order("lend_date desc, lend_amount desc").Find(&miserLoanRecords).Error
+	err = db.Order("lend_date desc, fund_status").Find(&miserLoanRecords).Error
 	return miserLoanRecords, total, err
 }
 

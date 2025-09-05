@@ -2,6 +2,7 @@
   import { computed, onMounted, ref, watch } from 'vue'
   import { listMiserCategoryList } from '@/api/miser/miser_category'
   import { getItemStat } from '@/api/miser/miser_stat'
+  import { formatterAmount } from '@/utils/format'
 
   const props = defineProps({
     startMonth: { type: String, required: true },
@@ -21,6 +22,22 @@
   }
 
   // 表格数据
+  const tableCols = [
+    {
+      row: 0,
+      prop: 'name',
+      label: '名称',
+      sortable: true,
+      fixed: false
+    },
+    {
+      row: 1,
+      prop: 'amount',
+      label: '金额',
+      sortable: true,
+      fixed: false
+    }
+  ]
   const dataMap = ref({})
   const fetchData = async () => {
     const params = { startMonth: props.startMonth, endMonth: props.endMonth }
@@ -51,8 +68,16 @@
         show-summary
         max-height="250px"
       >
-        <el-table-column prop="name" label="名称" sortable align="center" />
-        <el-table-column prop="amount" label="金额" sortable align="center" />
+        <el-table-column
+          v-for="c in tableCols"
+          :key="c.row"
+          :prop="c.prop"
+          :label="c.label"
+          :fixed="c.fixed"
+          :sortable="c.sortable"
+          :formatter="formatterAmount"
+          align="center"
+        />
       </el-table>
     </el-card>
   </div>

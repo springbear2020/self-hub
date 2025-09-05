@@ -80,34 +80,34 @@
         row-key="id"
         @selection-change="handleSelectionChange"
       >
-        <el-table-column type="selection" width="55" />
+        <el-table-column align="center" type="selection" width="55" />
 
-        <el-table-column align="left" label="ID" prop="id" width="110" />
+        <el-table-column align="center" label="ID" prop="id" width="55" />
 
-        <el-table-column align="left" label="交易 ID" prop="transactionId" />
+        <el-table-column align="center" label="交易 ID" prop="transactionId" />
 
-        <el-table-column align="left" label="交易分类" prop="categoryId">
+        <el-table-column align="center" label="交易分类" prop="categoryId">
           <template #default="{ row }">
             {{ categoryMap[row.categoryId] }}
           </template>
         </el-table-column>
 
-        <el-table-column align="left" label="明细名称" prop="name" />
+        <el-table-column align="center" label="明细名称" prop="name" />
 
-        <el-table-column align="left" label="交易金额" prop="amount" />
+        <el-table-column
+          align="center"
+          label="交易金额"
+          prop="amount"
+          :formatter="formatterAmount"
+        />
 
-        <el-table-column align="left" label="交易日期" prop="date">
+        <el-table-column align="center" label="交易日期" prop="date">
           <template #default="{ row }">
             {{ formatDate(row.date, 'yyyy-MM-dd') }}
           </template>
         </el-table-column>
 
-        <el-table-column
-          align="left"
-          label="操作"
-          fixed="right"
-          min-width="200"
-        >
+        <el-table-column align="center" label="操作" fixed="right" width="210">
           <template #default="scope">
             <el-button
               type="info"
@@ -253,7 +253,7 @@
           {{ detailForm.name }}
         </el-descriptions-item>
         <el-descriptions-item label="交易金额">
-          {{ detailForm.amount }}
+          {{ formatAmount(detailForm.amount) }}
         </el-descriptions-item>
         <el-descriptions-item label="交易时间">
           {{ formatDate(detailForm.date, 'yyyy-MM-dd') }}
@@ -270,7 +270,7 @@
 </template>
 
 <script setup>
-  import { formatDate } from '@/utils/format'
+  import { formatAmount, formatDate, formatterAmount } from '@/utils/format'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import { ref, reactive, computed, onMounted, watch } from 'vue'
   import { useAppStore } from '@/pinia'

@@ -1,5 +1,5 @@
 <script setup>
-  import { markRaw, ref, watch } from 'vue'
+  import { markRaw, nextTick, ref, watch } from 'vue'
   import { Money, TrendCharts, Wallet } from '@element-plus/icons-vue'
   import { getCardStat } from '@/api/miser/miser_stat'
   import config from '@/core/config'
@@ -35,7 +35,9 @@
     }
   ]
   const fetchAndRender = () => {
-    amountCardRef.value.fetchAndRender()
+    nextTick(() => {
+      amountCardRef.value.fetchAndRender()
+    })
   }
 
   watch(() => [props.startMonth, props.endMonth], fetchAndRender)

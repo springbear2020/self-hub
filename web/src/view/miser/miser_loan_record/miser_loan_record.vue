@@ -94,40 +94,54 @@
         row-key="id"
         @selection-change="handleSelectionChange"
       >
-        <el-table-column type="selection" width="55" />
+        <el-table-column align="center" type="selection" width="55" />
 
-        <el-table-column align="left" label="ID" prop="id" width="110" />
+        <el-table-column align="center" label="ID" prop="id" width="55" />
 
-        <el-table-column align="left" label="借还对象" prop="name" />
+        <el-table-column align="center" label="借还对象" prop="name" />
 
-        <el-table-column align="left" label="借出日期" prop="lendDate">
+        <el-table-column align="center" label="借出日期" prop="lendDate">
           <template #default="scope"
             >{{ formatDate(scope.row.lendDate, 'yyyy-MM-dd') }}
           </template>
         </el-table-column>
-        <el-table-column align="left" label="借出金额" prop="lendAmount" />
+        <el-table-column
+          align="center"
+          label="借出金额"
+          prop="lendAmount"
+          :formatter="formatterAmount"
+        />
 
-        <el-table-column align="left" label="资金状态" prop="fundStatus">
+        <el-table-column align="center" label="归还日期" prop="repayDate">
+          <template #default="scope"
+            >{{ formatDate(scope.row.repayDate, 'yyyy-MM-dd') }}
+          </template>
+        </el-table-column>
+        <el-table-column
+          align="center"
+          label="归还金额"
+          prop="repayAmount"
+          :formatter="formatterAmount"
+        />
+
+        <el-table-column align="center" label="资金状态" prop="fundStatus">
           <template #default="{ row }">
             <el-tag :type="loanStatusMap[row.fundStatus]?.color"
               >{{ loanStatusMap[row.fundStatus]?.label }}
             </el-tag>
           </template>
         </el-table-column>
-
-        <el-table-column align="left" label="归还日期" prop="repayDate">
-          <template #default="scope"
-            >{{ formatDate(scope.row.repayDate, 'yyyy-MM-dd') }}
+        <el-table-column
+          align="center"
+          label="结清耗时"
+          prop="settlementDuration"
+        >
+          <template #default="{ row }">
+            {{ formatDuration(row) }}
           </template>
         </el-table-column>
-        <el-table-column align="left" label="归还金额" prop="repayAmount" />
 
-        <el-table-column
-          align="left"
-          label="操作"
-          fixed="right"
-          min-width="280px"
-        >
+        <el-table-column align="center" label="操作" fixed="right" width="280">
           <template #default="scope">
             <el-button
               type="primary"
@@ -275,18 +289,7 @@
             :max="formData.lendAmount"
             :precision="2"
             :disabled="!renderRepayItem"
-            @blur="handleBlur"
           />
-        </el-form-item>
-        <el-form-item label="资金状态" prop="fundStatus">
-          <el-select v-model="formData.fundStatus" disabled>
-            <el-option
-              v-for="{ value, label } in loanStatusList"
-              :key="value"
-              :label="label"
-              :value="value"
-            />
-          </el-select>
         </el-form-item>
       </el-form>
     </el-drawer>
@@ -314,13 +317,13 @@
           {{ formatDate(detailForm.lendDate, 'yyyy-MM-dd') }}
         </el-descriptions-item>
         <el-descriptions-item label="借出金额">
-          {{ detailForm.lendAmount }}
+          {{ formatAmount(detailForm.lendAmount) }}
         </el-descriptions-item>
         <el-descriptions-item label="归还日期">
           {{ formatDate(detailForm.repayDate, 'yyyy-MM-dd') }}
         </el-descriptions-item>
         <el-descriptions-item label="归还金额">
-          {{ detailForm.repayAmount }}
+          {{ formatAmount(detailForm.repayAmount) }}
         </el-descriptions-item>
         <el-descriptions-item label="借还说明">
           <multiline-text :text="detailForm.description" />
@@ -329,6 +332,9 @@
           <el-tag :type="loanStatusMap[detailForm.fundStatus]?.color"
             >{{ loanStatusMap[detailForm.fundStatus]?.label }}
           </el-tag>
+        </el-descriptions-item>
+        <el-descriptions-item label="结清耗时">
+          {{ formatDuration(detailForm) }}
         </el-descriptions-item>
         <el-descriptions-item label="创建时间">
           {{ formatDate(detailForm.createdAt) }}
@@ -351,7 +357,12 @@
     getMiserLoanRecordList,
     listMiserLoanNameList
   } from '@/api/miser/miser_loan_record'
-  import { formatDate, getDictFunc } from '@/utils/format'
+  import {
+    formatDate,
+    getDictFunc,
+    formatAmount,
+    formatterAmount
+  } from '@/utils/format'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import { ref, reactive, computed, onMounted, watch } from 'vue'
   import { useAppStore } from '@/pinia'
@@ -365,7 +376,7 @@
 
   const cardStatRef = ref()
 
-  const LOAN_FUND_STATUS_LOAN = 1 // 待还款
+  const LOAN_FUND_STATUS_LOANING = 1 // 待还款
   const LOAN_FUND_STATUS_REPAYING = 2 // 部分还
   const LOAN_FUND_STATUS_REPAID = 3 // 已结清
 
@@ -380,24 +391,30 @@
     lendAmount: null,
     repayDate: new Date(),
     repayAmount: 0,
-    description: '',
-    fundStatus: 1
+    description: ''
   })
 
   const disabledDate = (time) => {
     return time.getTime() > Date.now()
   }
-  const handleBlur = () => {
-    const { lendAmount, repayAmount } = formData.value
-    const diff = repayAmount - lendAmount
-    if (diff === 0) {
-      formData.value.fundStatus = LOAN_FUND_STATUS_REPAID
-    } else if (diff < 0) {
-      formData.value.fundStatus = LOAN_FUND_STATUS_REPAYING
-    } else {
-      // NOTE 此为非法状态（归还金额比借出金额多），置为待还款
-      formData.value.fundStatus = LOAN_FUND_STATUS_LOAN
+  const formatDuration = ({ fundStatus, settlementDuration }) => {
+    const totalDays = settlementDuration
+    if (fundStatus !== LOAN_FUND_STATUS_REPAID || totalDays < 0) return '-'
+    if (totalDays === 0) return '0 天'
+
+    const years = Math.floor(totalDays / 360)
+    const months = Math.floor((totalDays % 360) / 30)
+    const days = totalDays % 30
+
+    const parts = []
+    if (years) parts.push(`${years} 年`)
+    if (months) parts.push(` ${months} 个月`)
+    if (days) {
+      if (years || months) parts.push('零')
+      parts.push(` ${days} 天`)
     }
+
+    return parts.join('').trim()
   }
 
   // 验证规则
@@ -440,7 +457,14 @@
         trigger: ['input', 'blur']
       }
     ],
-    fundStatus: [
+    repayDate: [
+      {
+        required: true,
+        message: '',
+        trigger: ['input', 'blur']
+      }
+    ],
+    repayAmount: [
       {
         required: true,
         message: '',
@@ -645,8 +669,7 @@
       lendAmount: null,
       repayDate: new Date(),
       repayAmount: 0,
-      description: '',
-      fundStatus: 1
+      description: ''
     }
   }
   // 弹窗确定

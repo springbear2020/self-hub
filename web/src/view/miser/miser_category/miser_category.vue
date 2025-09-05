@@ -56,28 +56,23 @@
         row-key="id"
         @selection-change="handleSelectionChange"
       >
-        <el-table-column type="selection" width="55" />
+        <el-table-column align="center" type="selection" width="55" />
 
-        <el-table-column align="left" label="ID" prop="id" width="110" />
+        <el-table-column align="center" label="ID" prop="id" width="55" />
 
-        <el-table-column align="left" label="交易类型" prop="transactionType">
+        <el-table-column align="center" label="交易类型" prop="transactionType">
           <template #default="{ row }">
             {{ transactionTypeMap[row.transactionType] }}
           </template>
         </el-table-column>
 
-        <el-table-column align="left" label="交易分类" prop="name" />
+        <el-table-column align="center" label="交易分类" prop="name" />
 
-        <el-table-column align="left" label="分类描述" prop="description" />
+        <el-table-column align="center" label="分类描述" prop="description" />
 
-        <el-table-column align="left" label="排序值" prop="sort" />
+        <el-table-column align="center" label="排序值" prop="sort" />
 
-        <el-table-column
-          align="left"
-          label="操作"
-          fixed="right"
-          min-width="200"
-        >
+        <el-table-column align="center" label="操作" fixed="right" width="210">
           <template #default="scope">
             <el-button
               type="info"
