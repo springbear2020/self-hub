@@ -1,66 +1,20 @@
 <script setup>
-  import { computed, ref } from 'vue'
+  import { computed, onMounted, ref } from 'vue'
   import { ElMessage } from 'element-plus'
   import { createMiserTransaction } from '@/api/miser/miser_transaction'
+  import { useMiserCategoryStore, useMiserTransactionTypeStore } from '@/pinia'
+  import { miserCfgMap } from '@/constants/miser'
 
-  const emits = defineEmits(['closed'])
-  const props = defineProps({
-    // {transactionType: transactionName}
-    transactionTypeMap: {
-      type: Object,
-      required: true,
-      default: () => {}
-    },
-    // {categoryId: transactionType}
-    typedCategoryMap: {
-      type: Object,
-      required: true,
-      default: () => {}
-    },
-    // {transactionType: categoryArray}
-    groupedCategoryMap: {
-      type: Object,
-      required: true,
-      default: () => {}
-    }
-  })
+  defineOptions({ name: 'TransactionDialog' })
+  const emits = defineEmits(['refresh'])
 
-  const TRANSACTION_TYPE_INCOME = 1
-  const TRANSACTION_TYPE_EXPENSE = 2
+  // 状态管理
+  const txnStore = useMiserTransactionTypeStore()
+  const catStore = useMiserCategoryStore()
 
-  const disabledDate = (time) => {
-    return time.getTime() > Date.now()
-  }
-  const formData = ref({
-    date: (() => {
-      const d = new Date()
-      d.setMonth(d.getMonth() - 1) // 默认批量采集上一个月
-      d.setDate(10)
-      return d
-    })(),
-    categories: {}
-  })
-  const income = computed(() => {
-    const incomeCategories =
-      props.groupedCategoryMap[TRANSACTION_TYPE_INCOME] || []
-    return incomeCategories.reduce((sum, c) => {
-      const incomeAmount = Number(formData.value.categories[c.id]) || 0
-      return sum + incomeAmount
-    }, 0)
-  })
-  const expense = computed(() => {
-    const expenseCategories =
-      props.groupedCategoryMap[TRANSACTION_TYPE_EXPENSE] || []
-    return expenseCategories.reduce((sum, c) => {
-      const amount = Number(formData.value.categories[c.id]) || 0
-      return sum + amount
-    }, 0)
-  })
-  const balance = computed(() => income.value - expense.value)
-
-  const showDialog = ref(false)
-  const openDialog = () => {
-    formData.value = {
+  // 响应式数据
+  const createFormData = () => {
+    return {
       date: (() => {
         const d = new Date()
         d.setMonth(d.getMonth() - 1) // 默认批量采集上一个月
@@ -69,12 +23,41 @@
       })(),
       categories: {}
     }
+  }
+  const formData = ref(createFormData())
+  const income = computed(() => {
+    const incomeCategories =
+      catStore.txnCatsMap[miserCfgMap.income.transactionType] || []
+    return incomeCategories.reduce((sum, c) => {
+      const incomeAmount = Number(formData.value.categories[c.id]) || 0
+      return sum + incomeAmount
+    }, 0)
+  })
+  const expense = computed(() => {
+    const expenseCategories =
+      catStore.txnCatsMap[miserCfgMap.expense.transactionType] || []
+    return expenseCategories.reduce((sum, c) => {
+      const amount = Number(formData.value.categories[c.id]) || 0
+      return sum + amount
+    }, 0)
+  })
+  const balance = computed(() => income.value - expense.value)
+  const disableSubmit = computed(() => {
+    return income.value === 0 && expense.value === 0
+  })
 
+  // 对话框逻辑
+  const showDialog = ref(false)
+  const openDialog = () => {
+    formData.value = createFormData()
     showDialog.value = true
   }
-  const closeDialog = (needUpdate = false) => {
-    if (typeof needUpdate === 'boolean' && needUpdate) {
-      emits('closed')
+  const disabledDate = (time) => {
+    return time.getTime() > Date.now()
+  }
+  const closeDialog = (needRefresh = false) => {
+    if (typeof needRefresh === 'boolean' && needRefresh) {
+      emits('refresh')
     }
     showDialog.value = false
   }
@@ -84,7 +67,7 @@
     Object.keys(categories).forEach((cid) => {
       list.push({
         categoryId: parseInt(cid),
-        transactionType: props.typedCategoryMap[cid],
+        transactionType: catStore.catTxnMap[cid],
         date: date,
         amount: categories[cid]
       })
@@ -92,13 +75,15 @@
 
     const { code } = await createMiserTransaction(list)
     if (code === 0) {
-      ElMessage({
-        type: 'success',
-        message: '批量新增交易流水成功'
-      })
+      ElMessage.success('批量新增交易流水成功')
       closeDialog(true)
     }
   }
+
+  onMounted(async () => {
+    await catStore.init()
+    await txnStore.init()
+  })
 
   defineExpose({ openDialog })
 </script>
@@ -108,14 +93,13 @@
     v-model="showDialog"
     title="批量新增交易流水"
     width="800px"
-    :before-close="closeDialog"
     :close-on-click-modal="false"
   >
     <div class="date-picker-box">
       <el-date-picker
         v-model="formData.date"
         type="date"
-        placeholder="选择日期"
+        placeholder="请选择"
         :clearable="false"
         :disabled-date="disabledDate"
       />
@@ -124,11 +108,11 @@
     <el-form :model="formData" inline label-width="70px">
       <!-- 按交易类型分别录入 -->
       <template
-        v-for="(categories, transactionType) in groupedCategoryMap"
+        v-for="(categories, transactionType) in catStore.txnCatsMap"
         :key="transactionType"
       >
         <el-divider>
-          {{ transactionTypeMap[transactionType] || '未知' }}
+          {{ txnStore.dataMap[transactionType] }}
         </el-divider>
 
         <el-form-item v-for="c in categories" :key="c.id" :label="c.name">
@@ -144,10 +128,10 @@
       <!-- 金额合计 -->
       <el-divider>合计</el-divider>
       <el-form-item label="收入">
-        <el-input-number :precision="2" v-model="income" disabled />
+        <el-input-number :min="0" :precision="2" v-model="income" disabled />
       </el-form-item>
       <el-form-item label="支出">
-        <el-input-number :precision="2" v-model="expense" disabled />
+        <el-input-number :min="0" :precision="2" v-model="expense" disabled />
       </el-form-item>
       <el-form-item label="结余">
         <el-input-number :precision="2" v-model="balance" disabled />
@@ -155,11 +139,12 @@
     </el-form>
 
     <template #footer>
-      <el-button @click="closeDialog">取消</el-button>
+      <el-button @click="closeDialog" icon="CloseBold">取消</el-button>
       <el-button
         type="primary"
+        icon="Select"
         @click="handleSubmit"
-        :disabled="income === 0 && expense === 0"
+        :disabled="disableSubmit"
         >保存
       </el-button>
     </template>

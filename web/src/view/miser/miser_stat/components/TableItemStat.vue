@@ -1,56 +1,62 @@
 <script setup>
-  import { computed, onMounted, ref, watch } from 'vue'
-  import { listMiserCategoryList } from '@/api/miser/miser_category'
-  import { getItemStat } from '@/api/miser/miser_stat'
-  import { formatterAmount } from '@/utils/format'
+  import { ref, onMounted, onBeforeUnmount } from 'vue'
+  import { getCategoryItemStat, getItemStat } from '@/api/miser/miser_stat'
+  import { miserTxnCfgMap } from '@/constants/miser'
+  import { useMiserCategoryStore, useMiserStatStore } from '@/pinia'
+  import { formatAmountCurrency, formatterAmount } from '@/utils/format'
 
-  const props = defineProps({
-    startMonth: { type: String, required: true },
-    endMonth: { type: String, required: true }
-  })
+  defineOptions({ name: 'TableItemStat' })
+  const emits = defineEmits(['open'])
 
-  // 分类列表
-  const categoryList = ref([])
-  const categoryMap = computed(() => {
-    return Object.fromEntries(
-      categoryList.value.map(({ id, name }) => [String(id), name])
+  // 状态管理
+  const { fetchData, subscribe, unsubscribe, startMonth, endMonth } =
+    useMiserStatStore()
+  const catStore = useMiserCategoryStore()
+
+  // 响应式数据
+  const dataMap = ref({})
+
+  // 模板方法
+  const handleClick = async (rowData) => {
+    const { categoryId, name, amount } = rowData
+    const { code, data } = await fetchData(
+      getCategoryItemStat.name,
+      getCategoryItemStat,
+      { name, categoryId }
     )
-  })
-  const fetchCategories = async () => {
-    const { code, data } = await listMiserCategoryList()
-    categoryList.value = code === 0 && Array.isArray(data) ? data : []
+    if (code !== 0 || !Array.isArray(data)) {
+      return
+    }
+
+    const transactionType = catStore.catTxnMap[categoryId]
+    const { color, colorTo } = miserTxnCfgMap[transactionType]
+
+    const chartData = {
+      title: `${startMonth} 至 ${endMonth}『${name}』${formatAmountCurrency(amount)}`,
+      xData: data.map(({ month }) => month),
+      yData: data.map(({ amount }) => amount),
+      itemColor: color,
+      areaColor: colorTo
+    }
+
+    emits('open', chartData)
   }
 
-  // 表格数据
-  const tableCols = [
-    {
-      row: 0,
-      prop: 'name',
-      label: '名称',
-      sortable: true,
-      fixed: false
-    },
-    {
-      row: 1,
-      prop: 'amount',
-      label: '金额',
-      sortable: true,
-      fixed: false
-    }
-  ]
-  const dataMap = ref({})
-  const fetchData = async () => {
-    const params = { startMonth: props.startMonth, endMonth: props.endMonth }
-    const { code, data } = await getItemStat(params)
+  // 生命周期
+  const fetchAndRender = async () => {
+    const { code, data } = await fetchData(getItemStat.name, getItemStat)
     dataMap.value = code === 0 && data ? data : {}
   }
 
   onMounted(async () => {
-    await fetchCategories()
-    await fetchData()
+    await catStore.init()
+    await fetchAndRender()
+    subscribe(getItemStat.name, fetchAndRender)
   })
 
-  watch(() => [props.startMonth, props.endMonth], fetchData)
+  onBeforeUnmount(() => {
+    unsubscribe(getItemStat.name, fetchAndRender)
+  })
 </script>
 
 <template>
@@ -59,7 +65,7 @@
       class="table-card"
       v-for="c in Object.keys(dataMap)"
       :key="c"
-      :header="`明细汇总 - ${categoryMap[c]}`"
+      :header="`明细汇总 - ${catStore.dataMap[c]}`"
     >
       <el-table
         :data="dataMap[c]"
@@ -67,16 +73,15 @@
         stripe
         show-summary
         max-height="250px"
+        @row-click="handleClick"
       >
+        <el-table-column prop="name" label="名称" sortable align="center" />
         <el-table-column
-          v-for="c in tableCols"
-          :key="c.row"
-          :prop="c.prop"
-          :label="c.label"
-          :fixed="c.fixed"
-          :sortable="c.sortable"
-          :formatter="formatterAmount"
+          prop="amount"
+          label="金额"
+          sortable
           align="center"
+          :formatter="formatterAmount"
         />
       </el-table>
     </el-card>
@@ -93,5 +98,9 @@
     .table-card {
       border-radius: 16px;
     }
+  }
+
+  :deep(.el-table__body tr:hover > td) {
+    cursor: pointer;
   }
 </style>

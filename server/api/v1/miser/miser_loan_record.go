@@ -126,8 +126,9 @@ func (miserLoanRecordApi *MiserLoanRecordApi) ListMiserLoanNameList(c *gin.Conte
 }
 
 func (miserLoanRecordApi *MiserLoanRecordApi) GetMiserLoanStatData(c *gin.Context) {
+	useGroup := c.DefaultQuery("useGroup", "false")
 	uid := utils.GetUserID(c)
-	data, err := miserLoanRecordService.GetMiserLoanStatData(uid)
+	data, err := miserLoanRecordService.GetMiserLoanStatData(uid, useGroup)
 	if err != nil {
 		global.GVA_LOG.Error("查询失败!", zap.Error(err))
 		response.FailWithMessage("查询失败:"+err.Error(), c)

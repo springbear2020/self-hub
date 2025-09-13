@@ -12,7 +12,7 @@
         <el-form-item label="交易分类" prop="categoryId">
           <el-select v-model="searchInfo.categoryId">
             <el-option
-              v-for="c in categoryList"
+              v-for="c in catStore.dataList"
               :label="c.name"
               :value="c.id"
               :key="c.id"
@@ -23,7 +23,7 @@
         <el-form-item label="交易类型" prop="transactionType">
           <el-select v-model="searchInfo.transactionType">
             <el-option
-              v-for="t in transactionTypeList"
+              v-for="t in txnStore.dataList"
               :label="t.label"
               :value="t.value"
               :key="t.value"
@@ -35,7 +35,7 @@
           <el-date-picker
             v-model="searchInfo.date"
             type="date"
-            placeholder="选择日期"
+            placeholder="请选择"
             :disabled-date="disabledDate"
           />
         </el-form-item>
@@ -54,14 +54,13 @@
       <div class="gva-btn-list">
         <el-button
           type="primary"
-          icon="circle-plus"
+          icon="CirclePlus"
           @click="handleTransactionsBatch"
           >流水
         </el-button>
         <el-button icon="plus" @click="openDialog()">新增</el-button>
         <el-button
           icon="delete"
-          style="margin-left: 10px"
           :disabled="!multipleSelection.length"
           @click="onDelete"
           type="danger"
@@ -71,28 +70,25 @@
       </div>
       <el-table
         ref="multipleTable"
-        style="width: 100%"
         tooltip-effect="dark"
         :data="tableData"
         row-key="id"
         @selection-change="handleSelectionChange"
       >
         <el-table-column align="center" type="selection" width="55" />
-
         <el-table-column align="center" label="ID" prop="id" width="55" />
-
         <el-table-column align="center" label="交易分类" prop="categoryId">
           <template #default="{ row }">
-            {{ categoryMap[row.categoryId] }}
+            {{ catStore.dataMap[row.categoryId] }}
           </template>
         </el-table-column>
-
         <el-table-column align="center" label="交易类型" prop="transactionType">
           <template #default="{ row }">
-            {{ transactionTypeMap[row.transactionType] }}
+            <el-tag :type="miserTxnCfgMap[row.transactionType]?.tagType"
+              >{{ txnStore.dataMap[row.transactionType] }}
+            </el-tag>
           </template>
         </el-table-column>
-
         <el-table-column align="center" label="交易日期" prop="date">
           <template #default="{ row }"
             >{{ formatDate(row.date, 'yyyy-MM-dd') }}
@@ -106,47 +102,37 @@
         />
 
         <el-table-column align="center" label="操作" fixed="right" width="280">
-          <template #default="scope">
+          <template #default="{ row }">
             <el-button
               type="primary"
+              icon="CirclePlus"
               link
-              class="table-button"
-              @click="handleItemsBatch(scope.row)"
+              @click="handleItemsBatch(row)"
             >
-              <el-icon style="margin-right: 5px">
-                <CirclePlus />
-              </el-icon>
               明细
             </el-button>
             <el-button
               type="info"
+              icon="InfoFilled"
               link
-              class="table-button"
-              @click="getDetails(scope.row)"
+              @click="getDetails(row)"
             >
-              <el-icon style="margin-right: 5px">
-                <InfoFilled />
-              </el-icon>
               详情
             </el-button>
             <el-button
               type="warning"
               link
               icon="edit"
-              class="table-button"
-              @click="updateMiserTransactionFunc(scope.row)"
+              @click="updateMiserTransactionFunc(row)"
               >编辑
             </el-button>
-            <el-button
-              type="danger"
-              link
-              icon="delete"
-              @click="deleteRow(scope.row)"
+            <el-button type="danger" link icon="delete" @click="deleteRow(row)"
               >删除
             </el-button>
           </template>
         </el-table-column>
       </el-table>
+
       <div class="gva-pagination">
         <el-pagination
           layout="total, sizes, prev, pager, next, jumper"
@@ -193,7 +179,7 @@
             @change="handleCategoryChange"
           >
             <el-option
-              v-for="c in categoryList"
+              v-for="c in catStore.dataList"
               :key="c.id"
               :label="c.name"
               :value="c.id"
@@ -203,7 +189,7 @@
         <el-form-item label="交易类型" prop="transactionType">
           <el-select v-model="formData.transactionType" disabled>
             <el-option
-              v-for="t in transactionTypeList"
+              v-for="t in txnStore.dataList"
               :label="t.label"
               :value="t.value"
               :key="t.value"
@@ -214,8 +200,7 @@
           <el-date-picker
             v-model="formData.date"
             type="date"
-            style="width: 100%"
-            placeholder="选择日期"
+            placeholder="请选择"
             :clearable="false"
             :disabled-date="disabledDate"
           />
@@ -223,10 +208,9 @@
         <el-form-item label="交易金额" prop="amount">
           <el-input-number
             v-model="formData.amount"
-            style="width: 100%"
+            :min="0"
             :precision="2"
-            :clearable="true"
-            placeholder="请输入交易金额"
+            placeholder="交易金额"
           />
         </el-form-item>
       </el-form>
@@ -239,20 +223,19 @@
       v-model="detailShow"
       :show-close="true"
       :before-close="closeDetailShow"
-      title="查看"
+      title="详情"
     >
       <el-descriptions :column="1" border>
         <el-descriptions-item label="ID">
           {{ detailForm.id }}
         </el-descriptions-item>
-        <el-descriptions-item label="UID">
-          {{ detailForm.userId }}
-        </el-descriptions-item>
         <el-descriptions-item label="交易分类">
-          {{ categoryMap[detailForm.categoryId] }}
+          {{ catStore.dataMap[detailForm.categoryId] }}
         </el-descriptions-item>
         <el-descriptions-item label="交易类型">
-          {{ transactionTypeMap[detailForm.transactionType] }}
+          <el-tag :type="miserTxnCfgMap[detailForm.transactionType]?.tagType"
+            >{{ txnStore.dataMap[detailForm.transactionType] }}
+          </el-tag>
         </el-descriptions-item>
         <el-descriptions-item label="交易日期">
           {{ formatDate(detailForm.date, 'yyyy-MM-dd') }}
@@ -269,32 +252,15 @@
       </el-descriptions>
     </el-drawer>
 
-    <transaction-dialog
-      ref="transactionDialogRef"
-      :typed-category-map="typedCategoryMap"
-      :transaction-type-map="transactionTypeMap"
-      :grouped-category-map="groupedCategoryMap"
-      @closed="handleDialogClosed"
-    />
-    <transaction-items-dialog
-      ref="transactionItemsDialogRef"
-      :category-map="categoryMap"
-    />
+    <!-- 批量新增交易流水 -->
+    <transaction-dialog ref="txnDialogRef" @refresh="handleRefresh" />
+
+    <!-- 批量新增流水明细 -->
+    <transaction-items-dialog ref="itemsDialogRef" />
   </div>
 </template>
 
 <script setup>
-  import {
-    formatAmount,
-    formatDate,
-    formatterAmount,
-    getDictFunc
-  } from '@/utils/format'
-  import { ElMessage, ElMessageBox } from 'element-plus'
-  import { ref, reactive, computed, onMounted } from 'vue'
-  import { useAppStore } from '@/pinia'
-  import { CirclePlus, InfoFilled } from '@element-plus/icons-vue'
-  import { listMiserCategoryList } from '@/api/miser/miser_category'
   import {
     createMiserTransaction,
     deleteMiserTransaction,
@@ -303,8 +269,17 @@
     findMiserTransaction,
     getMiserTransactionList
   } from '@/api/miser/miser_transaction'
+  import { ElMessage, ElMessageBox } from 'element-plus'
+  import { ref, reactive, onMounted } from 'vue'
+  import {
+    useAppStore,
+    useMiserCategoryStore,
+    useMiserTransactionTypeStore
+  } from '@/pinia'
+  import { formatAmount, formatDate, formatterAmount } from '@/utils/format'
   import TransactionDialog from '@/view/miser/miser_transaction/components/TransactionDialog.vue'
   import TransactionItemsDialog from '@/view/miser/miser_transaction/components/TransactionItemsDialog.vue'
+  import { miserTxnCfgMap } from '@/constants/miser'
 
   defineOptions({
     name: 'MiserTransaction'
@@ -356,25 +331,24 @@
 
   const elFormRef = ref()
   const elSearchFormRef = ref()
-  const disabledDate = (time) => {
-    return time.getTime() > Date.now()
-  }
-  const handleCategoryChange = (value) => {
-    const { transactionType } = categoryList.value.find(
-      ({ id }) => id === value
-    )
-    formData.value.transactionType = transactionType
-  }
 
   // =========== 表格控制部分 ===========
   const page = ref(1)
   const total = ref(0)
   const pageSize = ref(10)
   const tableData = ref([])
-  const searchInfo = ref({})
+  const searchInfo = ref({
+    categoryId: undefined,
+    transactionType: undefined,
+    date: undefined
+  })
   // 重置
   const onReset = () => {
-    searchInfo.value = {}
+    searchInfo.value = {
+      categoryId: undefined,
+      transactionType: undefined,
+      date: undefined
+    }
     getTableData()
   }
 
@@ -433,7 +407,9 @@
 
   // 删除行
   const deleteRow = (row) => {
-    const tip = `确定要删除『${categoryMap.value[row.categoryId]}/${formatDate(row.date, 'yyyy-MM-dd')}』吗？`
+    const tradeDate = formatDate(row.date, 'yyyy-MM-dd')
+    const categoryName = catStore.dataMap[row.categoryId]
+    const tip = `确定要删除『${tradeDate}/${categoryName}』吗？`
     ElMessageBox.confirm(tip, '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
@@ -578,80 +554,41 @@
     detailForm.value = {}
   }
 
-  // 交易类型
-  const transactionTypeList = ref([])
-  const transactionTypeMap = computed(() => {
-    const resultMap = {}
-    transactionTypeList.value.forEach(({ value, label }) => {
-      resultMap[value] = label
-    })
-    return resultMap
-  })
-  const fetchTransactionTypeList = async () => {
-    const dataList = await getDictFunc('miser_transaction_type')
-    transactionTypeList.value = dataList.map(({ value, label }) => {
-      return {
-        label: label,
-        value: parseInt(value)
-      }
-    })
-  }
-
-  // 分类列表
-  const categoryList = ref([])
-  const { categoryMap, typedCategoryMap, groupedCategoryMap } = (() => {
-    // {categoryId: categoryName}
-    const categoryMap = computed(() =>
-      categoryList.value.reduce((map, { id, name }) => {
-        map[id] = name
-        return map
-      }, {})
-    )
-    // {categoryId: transactionType}
-    const typedCategoryMap = computed(() =>
-      categoryList.value.reduce((map, { id, transactionType }) => {
-        map[id] = transactionType
-        return map
-      }, {})
-    )
-    // {transactionType: categoryArray}
-    const groupedCategoryMap = computed(() =>
-      categoryList.value.reduce((map, item) => {
-        const { id, name, sort, transactionType } = item
-        if (!map[transactionType]) {
-          map[transactionType] = []
-        }
-        map[transactionType].push({ id, name, sort, transactionType })
-        return map
-      }, {})
-    )
-    return { categoryMap, typedCategoryMap, groupedCategoryMap }
-  })()
-  const fetchCategoryList = async () => {
-    const { code, data } = await listMiserCategoryList()
-    if (code === 0 && data && data.length > 0) {
-      categoryList.value = data
-    } else {
-      categoryList.value = []
-    }
-  }
+  /********************************************************************************************************************/
 
   // 批量新增交易流水
-  const transactionDialogRef = ref()
+  const txnDialogRef = ref()
   const handleTransactionsBatch = () => {
-    transactionDialogRef.value.openDialog()
+    txnDialogRef.value.openDialog()
   }
-  const handleDialogClosed = async () => {
+  const handleRefresh = async () => {
     await getTableData()
   }
+
   // 批量新增流水明细
-  const transactionItemsDialogRef = ref()
+  const itemsDialogRef = ref()
   const handleItemsBatch = (row) => {
-    transactionItemsDialogRef.value.openDialog(row)
+    itemsDialogRef.value.openDialog(row)
   }
 
-  onMounted(() => {
-    fetchTransactionTypeList()
-    fetchCategoryList()
+  // 禁用日期
+  const disabledDate = (time) => {
+    return time.getTime() > Date.now()
+  }
+
+  // 交易分类 -> 交易类型
+  const handleCategoryChange = (categoryId) => {
+    formData.value.transactionType = catStore.catTxnMap[categoryId]
+  }
+
+  // 交易分类
+  const catStore = useMiserCategoryStore()
+
+  // 交易类型
+  const txnStore = useMiserTransactionTypeStore()
+
+  onMounted(async () => {
+    await catStore.init()
+    await txnStore.init()
   })
 </script>

@@ -1,9 +1,10 @@
 package dto
 
 type TableData struct {
-	Header string        `json:"header"`
-	Cols   []TableColumn `json:"cols"`
-	Rows   []TableRow    `json:"rows"`
+	HeaderId int           `json:"headerId"`
+	Header   string        `json:"header"`
+	Cols     []TableColumn `json:"cols"`
+	Rows     []TableRow    `json:"rows"`
 }
 
 type TableColumn struct {

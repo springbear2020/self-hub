@@ -8,9 +8,9 @@
 <script setup>
   import { ref, onMounted, onBeforeUnmount } from 'vue'
 
-  let observer
+  let observer = null
   const visible = ref(false)
-  const container = ref(null)
+  const container = ref()
 
   onMounted(() => {
     observer = new IntersectionObserver(

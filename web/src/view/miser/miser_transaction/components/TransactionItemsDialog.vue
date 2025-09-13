@@ -1,32 +1,30 @@
 <script setup>
-  import { computed, ref } from 'vue'
+  import { computed, onMounted, ref } from 'vue'
   import { ElMessage } from 'element-plus'
   import {
     createMiserTransactionItem,
     listItemDistinctNames
   } from '@/api/miser/miser_transaction_item'
+  import { useMiserCategoryStore } from '@/pinia'
+  import { formatAmountCurrency } from '@/utils/format'
 
-  const props = defineProps({
-    // {categoryId: categoryName}
-    categoryMap: {
-      type: Object,
-      required: true,
-      default: () => {}
-    }
-  })
+  defineOptions({ name: 'TransactionItemsDialog' })
 
-  const formData = ref({
-    transactionId: null,
-    categoryId: null,
-    categoryDate: null,
-    items: []
-  })
+  // 状态管理
+  const catStore = useMiserCategoryStore()
+
+  // 响应式数据
+  const formData = ref({})
   const itemsAmountSum = computed(() => {
     return formData.value.items.reduce((sum, { amount }) => {
       return sum + Number(amount || 0)
     }, 0)
   })
+  const disableSubmit = computed(() => {
+    return itemsAmountSum.value <= 0
+  })
 
+  // 对话框逻辑
   const showDialog = ref(false)
   const dialogTitle = ref('批量新增流水明细')
   const openDialog = async (rowData) => {
@@ -48,14 +46,15 @@
 
     // 设置对话框标题
     const dateStr = date.substring(0, 10)
-    const categoryName = props.categoryMap[categoryId]
-    dialogTitle.value = `批量新增『${dateStr}/${categoryName}/￥${amount}』流水明细`
+    const categoryName = catStore.dataMap[categoryId]
+    dialogTitle.value = `批量新增『${dateStr}/${categoryName}/${formatAmountCurrency(amount)}』流水明细`
 
     // 查询交易分类流水名称去重列表
     await fetchItemNameList(categoryId)
 
     showDialog.value = true
   }
+
   const closeDialog = () => {
     showDialog.value = false
   }
@@ -66,30 +65,25 @@
     // 各项之和校验
     const amountSum = Math.round(itemsAmountSum.value * 100) / 100
     if (amountSum !== categoryAmount) {
-      ElMessage({
-        type: 'error',
-        message: `明细金额之和 ${amountSum} 与流水金额 ${categoryAmount} 不等`
-      })
+      ElMessage.error(
+        `明细金额之和 ${amountSum} 与流水金额 ${categoryAmount} 不等`
+      )
       return
     }
 
-    const list = []
-    formData.value.items.forEach(({ name, amount }) => {
-      list.push({
+    const list = formData.value.items.map(({ name, amount }) => {
+      return {
         transactionId,
         categoryId,
         name,
         amount,
         date: formData.value.categoryDate
-      })
+      }
     })
 
     const { code } = await createMiserTransactionItem(list)
     if (code === 0) {
-      ElMessage({
-        type: 'success',
-        message: '批量新增流水明细成功'
-      })
+      ElMessage.success('批量新增流水明细成功')
       closeDialog()
     }
   }
@@ -113,12 +107,16 @@
   const distinctItemNames = ref([])
   const fetchItemNameList = async (categoryId) => {
     const { code, data } = await listItemDistinctNames({ categoryId })
-    if (code === 0 && data && data.length > 0) {
+    if (code === 0 && Array.isArray(data)) {
       distinctItemNames.value = data
     } else {
       distinctItemNames.value = []
     }
   }
+
+  onMounted(async () => {
+    await catStore.init()
+  })
 
   defineExpose({ openDialog })
 </script>
@@ -128,11 +126,10 @@
     v-model="showDialog"
     :title="dialogTitle"
     width="800px"
-    :before-close="closeDialog"
     :close-on-click-modal="false"
   >
     <el-form :model="formData" label-width="70px">
-      <el-table :data="formData.items" border>
+      <el-table :data="formData.items" border stripe>
         <el-table-column label="明细名称" align="center">
           <template #default="{ row }">
             <el-select
@@ -190,8 +187,14 @@
     </el-form>
 
     <template #footer>
-      <el-button @click="closeDialog">取消</el-button>
-      <el-button type="primary" @click="handleSubmit">保存</el-button>
+      <el-button @click="closeDialog" icon="CloseBold">取消</el-button>
+      <el-button
+        type="primary"
+        icon="Select"
+        @click="handleSubmit"
+        :disabled="disableSubmit"
+        >保存
+      </el-button>
     </template>
   </el-dialog>
 </template>

@@ -1,10 +1,11 @@
 package task
 
 import (
+	"github.com/springbear2020/self-hub/server/constants"
 	"github.com/springbear2020/self-hub/server/global"
 	"github.com/springbear2020/self-hub/server/model/task"
+	"github.com/springbear2020/self-hub/server/model/task/dto"
 	"github.com/springbear2020/self-hub/server/model/task/request"
-	"github.com/springbear2020/self-hub/server/model/task/response"
 )
 
 type DailyTaskCompletionService struct{}
@@ -46,7 +47,7 @@ func (taskCompletionService *DailyTaskCompletionService) GetDailyTaskCompletionI
 		db = db.Where("task_id = ?", *info.TaskId)
 	}
 	if info.FinishDate != nil {
-		db = db.Where("finish_date = ?", (*info.FinishDate).Format("2006-01-02"))
+		db = db.Where("finish_date = ?", *info.FinishDate)
 	}
 
 	// 查询总数
@@ -68,9 +69,9 @@ func (taskCompletionService *DailyTaskCompletionService) GetDailyTaskCompletionI
 	return taskCompletions, total, err
 }
 
-func (taskCompletionService *DailyTaskCompletionService) GetDailyTaskStatInfoList(uid uint, req request.DailyTaskStat) (list []response.DailyTaskStat, total int64, err error) {
+func (taskCompletionService *DailyTaskCompletionService) GetDailyTaskStatInfoList(uid uint, req request.DailyTaskStat) (list []dto.DailyTaskStat, total int64, err error) {
 	// 查询激活任务
-	isActive := 1
+	isActive := constants.AssertionYes
 	taskReq := request.DailyTaskSearch{
 		IsActive: &isActive,
 		PageInfo: req.PageInfo,
@@ -91,12 +92,12 @@ func (taskCompletionService *DailyTaskCompletionService) GetDailyTaskStatInfoLis
 			continue
 		}
 
-		completions := make([]response.DailyTaskStatCompletion, len(taskCompletions))
+		completions := make([]dto.DailyTaskStatCompletion, len(taskCompletions))
 		for i, c := range taskCompletions {
 			completions[i].FinishDate = c.FinishDate.Format("2006-01-02")
 			completions[i].CountValue = *c.CountValue
 		}
-		list = append(list, response.DailyTaskStat{
+		list = append(list, dto.DailyTaskStat{
 			Task:        t,
 			Completions: completions,
 		})

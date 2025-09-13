@@ -1,10 +1,12 @@
 package miser
 
 import (
+	"fmt"
 	"github.com/springbear2020/self-hub/server/global"
 	"github.com/springbear2020/self-hub/server/model/miser"
 	"github.com/springbear2020/self-hub/server/model/miser/request"
 	"github.com/springbear2020/self-hub/server/utils"
+	"strconv"
 )
 
 type MiserLoanRecordService struct{}
@@ -93,20 +95,46 @@ func (miserLoanRecordService *MiserLoanRecordService) ListMiserLoanNameList(uid 
 	return
 }
 
-func (miserLoanRecordService *MiserLoanRecordService) GetMiserLoanStatData(uid uint) (interface{}, error) {
-	var result struct {
-		LendAmount     float64 `json:"lend_amount"`     // 总借出
-		RepaidAmount   float64 `json:"repaid_amount"`   // 总归还
-		RepayingAmount float64 `json:"repaying_amount"` // 待还款
+func (miserLoanRecordService *MiserLoanRecordService) GetMiserLoanStatData(uid uint, useGroupStr string) (interface{}, error) {
+	var err error
+	useGroup, err := strconv.ParseBool(useGroupStr)
+	if err != nil {
+		useGroup = false
 	}
 
-	err := global.GVA_DB.Raw(`
-		SELECT SUM(lend_amount)                       AS lend_amount,
-		       SUM(repay_amount)                      AS repaid_amount,
-		       (SUM(lend_amount) - SUM(repay_amount)) AS repaying_amount
-		FROM miser_loan_records
-		WHERE user_id = ?;
-	`, uid).Scan(&result).Error
+	type StatData struct {
+		Name           string  `json:"name,omitempty"`  // 人员名称（汇总模式下为空）
+		LendAmount     float64 `json:"lend_amount"`     // 总借出金额
+		RepaidAmount   float64 `json:"repaid_amount"`   // 总归还金额
+		RepayingAmount float64 `json:"repaying_amount"` // 待还款金额
+	}
+
+	baseSQL := `
+        SELECT %s
+               SUM(lend_amount)                AS lend_amount,
+               SUM(repay_amount)               AS repaid_amount,
+               SUM(lend_amount - repay_amount) AS repaying_amount
+        FROM miser_loan_records
+        WHERE user_id = ?
+    `
+
+	var result interface{}
+	if useGroup {
+		// 分组统计
+		sql := fmt.Sprintf(baseSQL, "name,")
+		sql += " GROUP BY name"
+
+		var groupResults []StatData
+		err = global.GVA_DB.Raw(sql, uid).Scan(&groupResults).Error
+		result = groupResults
+	} else {
+		// 汇总统计
+		sql := fmt.Sprintf(baseSQL, "")
+
+		var summaryResult StatData
+		err = global.GVA_DB.Raw(sql, uid).Scan(&summaryResult).Error
+		result = summaryResult
+	}
 
 	return result, err
 }

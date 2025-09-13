@@ -2,13 +2,8 @@ package miser
 
 import (
 	"fmt"
+	"github.com/springbear2020/self-hub/server/constants"
 	"time"
-)
-
-const (
-	fundStatusLoaning  = 1 // 待还款
-	fundStatusRepaying = 2 // 部分还
-	fundStatusRepaid   = 3 // 已结清
 )
 
 type MiserLoanRecord struct {
@@ -40,12 +35,12 @@ func (record *MiserLoanRecord) CalculateLoanRecord() error {
 	diff := lend - repay
 	switch {
 	case diff == 0:
-		record.FundStatus = fundStatusRepaid
+		record.FundStatus = constants.FundStatusRepaid
 		record.SettlementDuration = int(record.RepayDate.Sub(*record.LendDate).Hours() / 24)
 	case diff == lend:
-		record.FundStatus = fundStatusLoaning
+		record.FundStatus = constants.FundStatusLoaning
 	default:
-		record.FundStatus = fundStatusRepaying
+		record.FundStatus = constants.FundStatusRepaying
 	}
 
 	return nil

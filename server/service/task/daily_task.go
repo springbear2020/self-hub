@@ -1,6 +1,7 @@
 package task
 
 import (
+	"github.com/springbear2020/self-hub/server/constants"
 	"github.com/springbear2020/self-hub/server/global"
 	"github.com/springbear2020/self-hub/server/model/task"
 	"github.com/springbear2020/self-hub/server/model/task/request"
@@ -64,6 +65,6 @@ func (dailyTaskService *DailyTaskService) GetDailyTaskInfoList(uid uint, info re
 }
 
 func (dailyTaskService *DailyTaskService) ListActiveTaskList(uid uint) (list []task.DailyTask, err error) {
-	err = global.GVA_DB.Where("user_id = ? AND is_active = 1", uid).Order("sort desc").Find(&list).Error
+	err = global.GVA_DB.Where("user_id = ? AND is_active = ?", uid, constants.AssertionYes).Order("sort desc").Find(&list).Error
 	return
 }

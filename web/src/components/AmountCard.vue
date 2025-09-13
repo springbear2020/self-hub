@@ -1,33 +1,18 @@
 <script setup>
-  import { onMounted, ref, nextTick } from 'vue'
+  import { nextTick, ref } from 'vue'
+  import { formatAmountCurrency } from '@/utils/format'
 
-  const props = defineProps({
-    apiFunc: {
-      type: Function,
-      required: true
-    },
-    apiParams: {
-      type: Object,
-      default: () => ({})
-    },
-    cardConfig: {
-      type: Array,
-      required: true
-    }
-  })
+  const emits = defineEmits(['click'])
+
+  const handleClick = (item) => {
+    emits('click', item)
+  }
 
   const dataList = ref([])
 
-  const formatAmount = (val) =>
-    new Intl.NumberFormat('zh-CN', {
-      style: 'currency',
-      currency: 'CNY'
-    }).format(val ?? 0)
-
-  const startCount = (item) => {
+  const animateValue = (item, duration = 1000) => {
     const start = 0
     const end = item.amount
-    const duration = 800
     const startTime = performance.now()
 
     const step = (now) => {
@@ -38,14 +23,16 @@
     requestAnimationFrame(step)
   }
 
-  const doRender = () => {
+  const doRender = (data) => {
+    dataList.value = data
+
     nextTick(() => {
       const cards = document.querySelectorAll('.stat-card')
       cards.forEach((card, index) => {
         const observer = new IntersectionObserver(
           ([entry]) => {
             if (entry.isIntersecting) {
-              startCount(dataList.value[index])
+              animateValue(dataList.value[index])
               observer.disconnect()
             }
           },
@@ -56,27 +43,7 @@
     })
   }
 
-  const fetchAndRender = async () => {
-    const { code, data } = await props.apiFunc(props.apiParams)
-    if (code === 0 && data) {
-      dataList.value.forEach((item) => {
-        item.amount = data[item.title] ?? 0
-        item.current = 0
-      })
-      doRender()
-    }
-  }
-
-  onMounted(() => {
-    dataList.value = props.cardConfig.map((it) => ({
-      ...it,
-      amount: 0,
-      current: 0
-    }))
-    fetchAndRender()
-  })
-
-  defineExpose({ fetchAndRender })
+  defineExpose({ doRender })
 </script>
 
 <template>
@@ -87,8 +54,9 @@
       shadow="hover"
       class="stat-card"
       :style="{
-        background: `linear-gradient(135deg, ${item.colorFrom}, ${item.colorTo})`
+        background: `linear-gradient(135deg, ${item.color}, ${item.colorTo})`
       }"
+      @click="handleClick(item)"
     >
       <div class="stat-content">
         <div class="icon-wrap">
@@ -98,7 +66,9 @@
         </div>
         <div class="stat-info">
           <div class="stat-label">{{ item.label }}</div>
-          <div class="stat-amount">{{ formatAmount(item.current) }}</div>
+          <div class="stat-amount">
+            {{ formatAmountCurrency(item.current) }}
+          </div>
         </div>
       </div>
     </el-card>
@@ -123,6 +93,7 @@
       box-shadow 0.2s ease,
       opacity 0.25s ease;
     opacity: 0.98;
+    cursor: pointer;
 
     &:hover {
       transform: translateY(-5px);

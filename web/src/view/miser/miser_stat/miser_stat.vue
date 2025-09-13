@@ -1,48 +1,16 @@
 <script setup>
-  import { computed, ref, defineAsyncComponent } from 'vue'
+  import { computed, ref, defineAsyncComponent, watch } from 'vue'
   import LazyWrapper from '@/components/LazyWrapper.vue'
+  import LineBarDialog from '@/components/LineBarDialog.vue'
   import { formatDate } from '@/utils/format'
+  import { useMiserStatStore } from '@/pinia'
+  import { MISER_MIN_MONTH, MISER_MIN_YEAR } from '@/constants/miser'
 
-  defineOptions({
-    name: 'MiserStat'
-  })
+  defineOptions({ name: 'MiserStat' })
 
-  // 月份选择框
-  const minYear = 2023
-  const minMonth = 7
-  const currentYear = new Date().getFullYear()
-  const monthRange = ref([new Date(minYear, minMonth), new Date()])
-  const startMonth = computed(() => {
-    return formatDate(monthRange.value[0], 'yyyy-MM')
-  })
-  const endMonth = computed(() => {
-    return formatDate(monthRange.value[1], 'yyyy-MM')
-  })
-  const disabledDate = (time) => {
-    return time.getTime() > Date.now()
-  }
-  const generateYearShortcuts = () => {
-    const shortcuts = []
-    shortcuts.push({
-      text: '所有时间',
-      value: () => {
-        const now = new Date()
-        return [new Date(minYear, minMonth), now]
-      }
-    })
-
-    for (let year = currentYear; year >= minYear; year--) {
-      shortcuts.push({
-        text: `${year} 年`,
-        value: () => {
-          return [new Date(year, 0), new Date(year, 11, 31)]
-        }
-      })
-    }
-
-    return shortcuts
-  }
-  const shortcuts = generateYearShortcuts()
+  // 常量
+  const MIN_YEAR = MISER_MIN_YEAR
+  const MIN_MONTH = MISER_MIN_MONTH - 1
 
   // 组件懒加载
   const CardStat = defineAsyncComponent(
@@ -61,6 +29,56 @@
   const TableItemStat = defineAsyncComponent(
     () => import('./components/TableItemStat.vue')
   )
+
+  // 状态管理
+  const { setRange } = useMiserStatStore()
+
+  // 响应式数据
+  const monthRange = ref([new Date(MIN_YEAR, MIN_MONTH), new Date()])
+  const startMonth = computed(() => formatDate(monthRange.value[0], 'yyyy-MM'))
+  const endMonth = computed(() => formatDate(monthRange.value[1], 'yyyy-MM'))
+
+  watch(
+    [startMonth, endMonth],
+    ([s, e]) => {
+      if (!s || !e) {
+        return
+      }
+      setRange(s, e)
+    },
+    { immediate: true }
+  )
+
+  // 模板方法
+  const disabledDate = (time) => {
+    return time.getTime() > Date.now()
+  }
+  const shortcuts = ((minYear, minMonth) => {
+    const list = []
+
+    list.push({
+      text: '所有时间',
+      value: () => {
+        const now = new Date()
+        return [new Date(minYear, minMonth), now]
+      }
+    })
+
+    for (let cur = new Date().getFullYear(); cur >= minYear; cur--) {
+      list.push({
+        text: `${cur} 年`,
+        value: () => [new Date(cur, 0), new Date(cur, 11, 31)]
+      })
+    }
+
+    return list
+  })(MIN_YEAR, MIN_MONTH)
+
+  // 对话框逻辑
+  const dialogRef = ref()
+  const handleOpen = (chartData) => {
+    dialogRef.value.openDialog(chartData)
+  }
 </script>
 
 <template>
@@ -82,26 +100,32 @@
       </el-form>
     </div>
 
-    <card-stat :start-month="startMonth" :end-month="endMonth" />
+    <card-stat @open="handleOpen" />
 
     <lazy-wrapper>
-      <pie-stat :start-month="startMonth" :end-month="endMonth" />
+      <pie-stat @open="handleOpen" />
     </lazy-wrapper>
+
     <lazy-wrapper>
-      <line-stat :start-month="startMonth" :end-month="endMonth" />
+      <line-stat @open="handleOpen" />
     </lazy-wrapper>
+
     <lazy-wrapper>
-      <table-month-stat :start-month="startMonth" :end-month="endMonth" />
+      <table-month-stat @open="handleOpen" />
     </lazy-wrapper>
+
     <lazy-wrapper>
-      <table-summary-stat :start-month="startMonth" :end-month="endMonth" />
+      <table-summary-stat @open="handleOpen" />
     </lazy-wrapper>
+
     <lazy-wrapper>
-      <table-item-stat :start-month="startMonth" :end-month="endMonth" />
+      <table-item-stat @open="handleOpen" />
     </lazy-wrapper>
 
     <div class="no-more-text">没有更多了</div>
   </div>
+
+  <line-bar-dialog ref="dialogRef" />
 </template>
 
 <style scoped lang="scss">

@@ -37,7 +37,6 @@
         </el-button>
         <el-button
           icon="delete"
-          style="margin-left: 10px"
           :disabled="!multipleSelection.length"
           @click="onDelete"
           type="danger"
@@ -48,7 +47,6 @@
 
       <el-table
         ref="multipleTable"
-        style="width: 100%"
         tooltip-effect="dark"
         :data="tableData"
         row-key="id"
@@ -60,7 +58,9 @@
         <el-table-column align="center" label="任务描述" prop="description" />
         <el-table-column align="center" label="是否启用" prop="isActive">
           <template #default="{ row }">
-            <assert-tag :active="row.isActive" />
+            <el-tag :type="tagTypeMap[row.isActive]">
+              {{ formatBoolean(row.isActive) }}
+            </el-tag>
           </template>
         </el-table-column>
         <el-table-column align="center" label="排序值" prop="sort" />
@@ -69,33 +69,26 @@
             <span>{{ formatValueRange(row) }}</span>
           </template>
         </el-table-column>
+
         <el-table-column align="center" label="操作" fixed="right" width="210">
-          <template #default="scope">
+          <template #default="{ row }">
             <el-button
               type="info"
+              icon="InfoFilled"
               link
-              class="table-button"
-              @click="getDetails(scope.row)"
+              @click="getDetails(row)"
             >
-              <el-icon style="margin-right: 5px">
-                <InfoFilled />
-              </el-icon>
               详情
             </el-button>
             <el-button
               type="warning"
               link
               icon="edit"
-              class="table-button"
-              @click="updateDailyTaskFunc(scope.row)"
+              @click="updateDailyTaskFunc(row)"
             >
               编辑
             </el-button>
-            <el-button
-              type="danger"
-              link
-              icon="delete"
-              @click="deleteRow(scope.row)"
+            <el-button type="danger" link icon="delete" @click="deleteRow(row)"
               >删除
             </el-button>
           </template>
@@ -163,19 +156,27 @@
           />
         </el-form-item>
         <el-form-item label="排序值" prop="sort">
-          <el-input-number v-model="formData.sort" placeholder="请输入排序值" />
+          <el-input-number
+            v-model="formData.sort"
+            :min="0"
+            :precision="0"
+            placeholder="排序值"
+          />
         </el-form-item>
         <el-form-item label="计数值最小值" prop="minValue">
           <el-input-number
             v-model="formData.minValue"
-            placeholder="请输入最小值"
+            placeholder="最小值"
             :min="1"
+            :precision="0"
           />
         </el-form-item>
         <el-form-item label="计数值最大值" prop="maxValue">
           <el-input-number
             v-model="formData.maxValue"
-            placeholder="请输入最大值"
+            :min="1"
+            :precision="0"
+            placeholder="最大值"
           />
         </el-form-item>
       </el-form>
@@ -191,11 +192,8 @@
       title="详情"
     >
       <el-descriptions :column="1" border>
-        <el-descriptions-item label="任务 ID">
+        <el-descriptions-item label="ID">
           {{ detailForm.id }}
-        </el-descriptions-item>
-        <el-descriptions-item label="用户 ID">
-          {{ detailForm.userId }}
         </el-descriptions-item>
         <el-descriptions-item label="任务名称">
           {{ detailForm.name }}
@@ -204,7 +202,9 @@
           {{ detailForm.description }}
         </el-descriptions-item>
         <el-descriptions-item label="是否启用">
-          <assert-tag :active="detailForm.isActive" />
+          <el-tag :type="tagTypeMap[detailForm.isActive]">
+            {{ formatBoolean(detailForm.isActive) }}
+          </el-tag>
         </el-descriptions-item>
         <el-descriptions-item label="排序值">
           {{ detailForm.sort }}
@@ -235,9 +235,7 @@
   import { ElMessage, ElMessageBox } from 'element-plus'
   import { ref, reactive } from 'vue'
   import { useAppStore } from '@/pinia'
-  import { InfoFilled } from '@element-plus/icons-vue'
-  import { formatDate } from '@/utils/format'
-  import AssertTag from '@/components/AssertTag.vue'
+  import { formatBoolean, formatDate } from '@/utils/format'
 
   defineOptions({
     name: 'DailyTask'
@@ -247,6 +245,7 @@
   const btnLoading = ref(false)
   const appStore = useAppStore()
 
+  // 自动化生成的字典（可能为空）以及字段
   const formData = ref({
     name: '',
     description: '',
@@ -256,9 +255,6 @@
     maxValue: 100,
     isActiveBool: true
   })
-  const handleSwitchChange = (value) => {
-    formData.value.isActive = value ? 1 : 0
-  }
 
   // 验证规则
   const rule = reactive({
@@ -377,10 +373,6 @@
 
   // ============== 表格控制部分结束 ===============
 
-  const formatValueRange = ({ minValue, maxValue }) => {
-    return `[${minValue},${maxValue}]`
-  }
-
   // 获取需要的字典 可能为空 按需保留
   const setOptions = async () => {}
 
@@ -485,10 +477,10 @@
       name: '',
       description: '',
       isActive: 1,
-      isActiveBool: true,
-      sort: total.value + 1,
+      sort: 1,
       minValue: 1,
-      maxValue: 100
+      maxValue: 100,
+      isActiveBool: true
     }
   }
   // 弹窗确定
@@ -544,5 +536,21 @@
   const closeDetailShow = () => {
     detailShow.value = false
     detailForm.value = {}
+  }
+
+  /********************************************************************************************************************/
+
+  // 是否启用
+  const tagTypeMap = {
+    0: 'danger',
+    1: 'success'
+  }
+  const handleSwitchChange = (value) => {
+    formData.value.isActive = value ? 1 : 0
+  }
+
+  // 数值范围
+  const formatValueRange = ({ minValue, maxValue }) => {
+    return `[${minValue},${maxValue}]`
   }
 </script>

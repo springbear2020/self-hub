@@ -47,3 +47,27 @@ export const getItemStat = (params) => {
     params
   })
 }
+
+export const getCategoryStat = (params) => {
+  return service({
+    url: 'miserStat/getCategoryStat',
+    method: 'get',
+    params
+  })
+}
+
+export const getMonthTransactionStat = (params) => {
+  return service({
+    url: 'miserStat/getMonthTransactionStat',
+    method: 'get',
+    params
+  })
+}
+
+export const getCategoryItemStat = (params) => {
+  return service({
+    url: 'miserStat/getCategoryItemStat',
+    method: 'get',
+    params
+  })
+}

@@ -1,53 +1,81 @@
 <script setup>
-  import { markRaw, nextTick, ref, watch } from 'vue'
-  import { Money, TrendCharts, Wallet } from '@element-plus/icons-vue'
-  import { getCardStat } from '@/api/miser/miser_stat'
-  import config from '@/core/config'
+  import { ref, onMounted, onBeforeUnmount } from 'vue'
+  import { getCardStat, getLineStat } from '@/api/miser/miser_stat'
   import AmountCard from '@/components/AmountCard.vue'
+  import { miserCfgMap, miserTxnCfgMap } from '@/constants/miser'
+  import { useMiserStatStore } from '@/pinia'
+  import { formatAmountCurrency } from '@/utils/format'
 
-  const props = defineProps({
-    startMonth: { type: String, required: true },
-    endMonth: { type: String, required: true }
-  })
+  defineOptions({ name: 'CardStat' })
+  const emits = defineEmits(['open'])
 
-  const amountCardRef = ref()
-  const cardConfig = [
+  // 状态管理
+  const { fetchData, subscribe, unsubscribe, startMonth, endMonth } =
+    useMiserStatStore()
+
+  // 响应式数据
+  const cardRef = ref()
+  const cardList = ref([
     {
-      title: 'income',
-      label: '总收入',
-      icon: markRaw(Money),
-      colorFrom: config.miser.income.color,
-      colorTo: config.miser.income.colorTo
+      ...miserCfgMap.income,
+      label: '总收入'
     },
     {
-      title: 'expense',
-      label: '总支出',
-      icon: markRaw(TrendCharts),
-      colorFrom: config.miser.expense.color,
-      colorTo: config.miser.expense.colorTo
+      ...miserCfgMap.expense,
+      label: '总支出'
     },
     {
-      title: 'balance',
-      label: '总结余',
-      icon: markRaw(Wallet),
-      colorFrom: config.miser.balance.color,
-      colorTo: config.miser.balance.colorTo
+      ...miserCfgMap.balance,
+      label: '总结余'
     }
-  ]
-  const fetchAndRender = () => {
-    nextTick(() => {
-      amountCardRef.value.fetchAndRender()
-    })
+  ])
+
+  // 模板方法
+  const handleClick = async (cardData) => {
+    const { code, data } = await fetchData(getLineStat.name, getLineStat)
+    if (code !== 0 || !Array.isArray(data)) {
+      return
+    }
+
+    const { label, amount, transactionType } = cardData
+    const { color, colorTo, name: key } = miserTxnCfgMap[transactionType]
+
+    const chartData = {
+      title: `${startMonth} 至 ${endMonth}『${label}』${formatAmountCurrency(amount)}`,
+      xData: data.map(({ month }) => month),
+      yData: data.map((item) => item[key]),
+      itemColor: color,
+      areaColor: colorTo
+    }
+
+    emits('open', chartData)
   }
 
-  watch(() => [props.startMonth, props.endMonth], fetchAndRender)
+  // 生命周期
+  const fetchAndRender = async () => {
+    const { code, data } = await fetchData(getCardStat.name, getCardStat)
+    if (code !== 0 || !data) {
+      return
+    }
+
+    cardList.value.forEach((item) => {
+      item.amount = data[item.name] ?? 0
+      item.current = 0
+    })
+
+    cardRef.value.doRender(cardList.value)
+  }
+
+  onMounted(() => {
+    fetchAndRender()
+    subscribe(getCardStat.name, fetchAndRender)
+  })
+
+  onBeforeUnmount(() => {
+    unsubscribe(getCardStat.name, fetchAndRender)
+  })
 </script>
 
 <template>
-  <amount-card
-    ref="amountCardRef"
-    :api-func="getCardStat"
-    :api-params="{ startMonth, endMonth }"
-    :card-config="cardConfig"
-  />
+  <amount-card ref="cardRef" :data-list="cardList" @click="handleClick" />
 </template>

@@ -1,64 +1,78 @@
 <script setup>
-  import { ref } from 'vue'
+  import { computed, ref } from 'vue'
   import CalendarHeatmap from './components/CalendarHeatmap.vue'
   import { getDailyTaskStatList } from '@/api/task/daily_task_completion'
+  import { TASK_MIN_YEAR } from '@/constants/miser'
 
-  defineOptions({
-    name: 'DailyTaskStat'
-  })
+  defineOptions({ name: 'DailyTaskStat' })
 
+  // === 常量 ===
+  const MIN_YEAR = TASK_MIN_YEAR
+  const CURRENT_YEAR = new Date().getFullYear()
+  const PAGE_SIZE = 5
+
+  // === 响应式数据 ===
   const list = ref([])
   const noMore = ref(false)
   const loading = ref(false)
-  const minYear = 2020
-  const currentYear = new Date().getFullYear()
-  const formData = ref({
-    page: 1,
-    pageSize: 5,
-    year: currentYear,
-    startDate: `${currentYear}-01-01`,
-    endDate: `${currentYear}-12-31`
+  const formData = ref(createFormData(CURRENT_YEAR))
+  const disablePrevYear = computed(() => {
+    return formData.value.year <= MIN_YEAR
+  })
+  const disableNextYear = computed(() => {
+    return formData.value.year >= CURRENT_YEAR
   })
 
-  const changeYear = (delta = 0) => {
-    const newYear = formData.value.year + delta
-    formData.value.year = newYear
-    formData.value.page = 1
-    formData.value.startDate = `${newYear}-01-01`
-    formData.value.endDate = `${newYear}-12-31`
-    list.value = []
-    noMore.value = false
-    doLoad()
-  }
+  // === 模板方法 ===
   const doLoad = async () => {
     if (loading.value || noMore.value) {
       return
     }
-    loading.value = true
 
-    const { code, data } = await getDailyTaskStatList(formData.value)
-    if (code === 0) {
-      if (Array.isArray(data.list) && data.list.length > 0) {
-        const mapped = data.list.map((item) => {
-          const { task, completions } = item
-          const heatmapData = completions.map(({ finishDate, countValue }) => {
-            return [finishDate, countValue > 0 ? countValue : null]
-          })
-          return {
-            ...task,
-            heatmapData
-          }
-        })
-        list.value.push(...mapped)
-        formData.value.page += 1
+    loading.value = true
+    try {
+      const { code, data } = await getDailyTaskStatList(formData.value)
+      if (code === 0 && data && Array.isArray(data.list)) {
+        list.value.push(...mapTaskData(data.list))
+        if (data.list.length >= formData.value.pageSize) {
+          formData.value.page += 1
+        } else {
+          noMore.value = true
+        }
       } else {
         noMore.value = true
       }
-    } else {
-      noMore.value = true
+    } finally {
+      loading.value = false
     }
+  }
+  const changeYear = (delta = 0) => {
+    const newYear = formData.value.year + delta
+    formData.value = createFormData(newYear) // 重置分页和时间范围
+    list.value = []
+    noMore.value = false
+    doLoad()
+  }
 
-    loading.value = false
+  // === 工具函数 ===
+  function createFormData(year, page = 1, pageSize = PAGE_SIZE) {
+    return {
+      page,
+      pageSize,
+      year,
+      startDate: `${year}-01-01`,
+      endDate: `${year}-12-31`
+    }
+  }
+
+  function mapTaskData(data) {
+    return data.map(({ task, completions }) => ({
+      ...task,
+      completions: completions.map(({ finishDate, countValue }) => [
+        finishDate,
+        countValue > 0 ? countValue : null
+      ])
+    }))
   }
 </script>
 
@@ -66,7 +80,7 @@
   <div class="year-adjuster">
     <el-button
       circle
-      :disabled="formData.year <= minYear"
+      :disabled="disablePrevYear"
       @click="changeYear(-1)"
       icon="ArrowLeftBold"
     >
@@ -76,7 +90,7 @@
 
     <el-button
       circle
-      :disabled="formData.year >= currentYear"
+      :disabled="disableNextYear"
       @click="changeYear(1)"
       icon="ArrowRightBold"
     >
@@ -93,8 +107,7 @@
       <calendar-heatmap
         :year="formData.year"
         :task="item"
-        :completions="item.heatmapData"
-        @refresh="changeYear"
+        :completions="item.completions"
       />
     </div>
 

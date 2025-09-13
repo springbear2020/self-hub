@@ -11,15 +11,21 @@
       >
         <el-form-item label="交易 ID" prop="transactionId">
           <el-input-number
+            :min="0"
+            :precision="0"
             v-model="searchInfo.transactionId"
             placeholder="交易 ID"
           />
         </el-form-item>
 
         <el-form-item label="交易分类" prop="categoryId">
-          <el-select v-model="searchInfo.categoryId" filterable>
+          <el-select
+            v-model="searchInfo.categoryId"
+            filterable
+            default-first-option
+          >
             <el-option
-              v-for="c in categoryList"
+              v-for="c in catStore.dataList"
               :key="c.id"
               :label="c.name"
               :value="c.id"
@@ -28,9 +34,9 @@
         </el-form-item>
 
         <el-form-item label="明细名称" prop="name">
-          <el-select v-model="searchInfo.name" filterable>
+          <el-select v-model="searchInfo.name" filterable default-first-option>
             <el-option
-              v-for="name in distinctItemNames"
+              v-for="name in txnItemStore.dataList"
               :key="name"
               :label="name"
               :value="name"
@@ -42,7 +48,7 @@
           <el-date-picker
             v-model="searchInfo.date"
             type="date"
-            placeholder="选择日期"
+            placeholder="请选择"
             :disabled-date="disabledDate"
           />
         </el-form-item>
@@ -64,7 +70,6 @@
         </el-button>
         <el-button
           icon="delete"
-          style="margin-left: 10px"
           :disabled="!multipleSelection.length"
           @click="onDelete"
           type="danger"
@@ -74,33 +79,26 @@
       </div>
       <el-table
         ref="multipleTable"
-        style="width: 100%"
         tooltip-effect="dark"
         :data="tableData"
         row-key="id"
         @selection-change="handleSelectionChange"
       >
         <el-table-column align="center" type="selection" width="55" />
-
         <el-table-column align="center" label="ID" prop="id" width="55" />
-
         <el-table-column align="center" label="交易 ID" prop="transactionId" />
-
         <el-table-column align="center" label="交易分类" prop="categoryId">
           <template #default="{ row }">
-            {{ categoryMap[row.categoryId] }}
+            {{ catStore.dataMap[row.categoryId] }}
           </template>
         </el-table-column>
-
         <el-table-column align="center" label="明细名称" prop="name" />
-
         <el-table-column
           align="center"
           label="交易金额"
           prop="amount"
           :formatter="formatterAmount"
         />
-
         <el-table-column align="center" label="交易日期" prop="date">
           <template #default="{ row }">
             {{ formatDate(row.date, 'yyyy-MM-dd') }}
@@ -108,36 +106,29 @@
         </el-table-column>
 
         <el-table-column align="center" label="操作" fixed="right" width="210">
-          <template #default="scope">
+          <template #default="{ row }">
             <el-button
               type="info"
+              icon="InfoFilled"
               link
-              class="table-button"
-              @click="getDetails(scope.row)"
+              @click="getDetails(row)"
             >
-              <el-icon style="margin-right: 5px">
-                <InfoFilled />
-              </el-icon>
               详情
             </el-button>
             <el-button
               type="warning"
               link
               icon="edit"
-              class="table-button"
-              @click="updateMiserTransactionItemFunc(scope.row)"
+              @click="updateMiserTransactionItemFunc(row)"
               >编辑
             </el-button>
-            <el-button
-              type="danger"
-              link
-              icon="delete"
-              @click="deleteRow(scope.row)"
+            <el-button type="danger" link icon="delete" @click="deleteRow(row)"
               >删除
             </el-button>
           </template>
         </el-table-column>
       </el-table>
+
       <div class="gva-pagination">
         <el-pagination
           layout="total, sizes, prev, pager, next, jumper"
@@ -181,15 +172,16 @@
         <el-form-item label="交易 ID" prop="transactionId">
           <el-input-number
             v-model="formData.transactionId"
-            :clearable="true"
-            @blur="handleBlur"
+            :min="0"
+            :precision="0"
             placeholder="交易 ID"
+            @blur="handleBlur"
           />
         </el-form-item>
         <el-form-item label="交易分类" prop="categoryId">
           <el-select v-model="formData.categoryId" disabled>
             <el-option
-              v-for="c in categoryList"
+              v-for="c in catStore.dataList"
               :key="c.id"
               :label="c.name"
               :value="c.id"
@@ -197,7 +189,14 @@
           </el-select>
         </el-form-item>
         <el-form-item label="交易日期" prop="date">
-          <el-input v-model="formData.date" placeholder="交易日期" disabled />
+          <el-date-picker
+            v-model="formData.date"
+            type="date"
+            placeholder="请选择"
+            :clearable="false"
+            :disabled-date="disabledDate"
+            disabled
+          />
         </el-form-item>
         <el-form-item label="明细名称" prop="name">
           <el-select
@@ -208,7 +207,7 @@
             placeholder="请输入明细名称"
           >
             <el-option
-              v-for="name in distinctItemNames"
+              v-for="name in txnItemStore.dataList"
               :key="name"
               :label="name"
               :value="name"
@@ -218,10 +217,9 @@
         <el-form-item label="交易金额" prop="amount">
           <el-input-number
             v-model="formData.amount"
-            style="width: 100%"
+            :min="0"
             :precision="2"
-            :clearable="true"
-            placeholder="请输入交易金额"
+            placeholder="交易金额"
           />
         </el-form-item>
       </el-form>
@@ -234,20 +232,17 @@
       v-model="detailShow"
       :show-close="true"
       :before-close="closeDetailShow"
-      title="查看"
+      title="详情"
     >
       <el-descriptions :column="1" border>
         <el-descriptions-item label="ID">
           {{ detailForm.id }}
         </el-descriptions-item>
-        <el-descriptions-item label="用户 ID">
-          {{ detailForm.userId }}
-        </el-descriptions-item>
         <el-descriptions-item label="交易 ID">
           {{ detailForm.transactionId }}
         </el-descriptions-item>
         <el-descriptions-item label="交易分类">
-          {{ categoryMap[detailForm.categoryId] }}
+          {{ catStore.dataMap[detailForm.categoryId] }}
         </el-descriptions-item>
         <el-descriptions-item label="明细名称">
           {{ detailForm.name }}
@@ -270,22 +265,23 @@
 </template>
 
 <script setup>
-  import { formatAmount, formatDate, formatterAmount } from '@/utils/format'
-  import { ElMessage, ElMessageBox } from 'element-plus'
-  import { ref, reactive, computed, onMounted, watch } from 'vue'
-  import { useAppStore } from '@/pinia'
-  import { InfoFilled } from '@element-plus/icons-vue'
-  import { findMiserTransaction } from '@/api/miser/miser_transaction'
-  import { listMiserCategoryList } from '@/api/miser/miser_category'
   import {
     createMiserTransactionItem,
     deleteMiserTransactionItem,
     deleteMiserTransactionItemByIds,
     updateMiserTransactionItem,
     findMiserTransactionItem,
-    getMiserTransactionItemList,
-    listItemDistinctNames
+    getMiserTransactionItemList
   } from '@/api/miser/miser_transaction_item'
+  import { findMiserTransaction } from '@/api/miser/miser_transaction'
+  import { ElMessage, ElMessageBox } from 'element-plus'
+  import { ref, reactive, onMounted } from 'vue'
+  import {
+    useAppStore,
+    useMiserCategoryStore,
+    useMiserTransactionItemStore
+  } from '@/pinia'
+  import { formatAmount, formatDate, formatterAmount } from '@/utils/format'
 
   defineOptions({
     name: 'MiserTransactionItem'
@@ -299,19 +295,10 @@
   const formData = ref({
     transactionId: undefined,
     categoryId: undefined,
+    date: undefined,
     name: '',
-    amount: undefined,
-    date: undefined
+    amount: undefined
   })
-
-  const handleBlur = async () => {
-    const { transactionId } = formData.value
-    if (transactionId) {
-      const { categoryId, date } = await fetchTransactionInfo(transactionId)
-      formData.value.categoryId = categoryId
-      formData.value.date = date
-    }
-  }
 
   // 验证规则
   const rule = reactive({
@@ -365,13 +352,21 @@
   const total = ref(0)
   const pageSize = ref(10)
   const tableData = ref([])
-  const searchInfo = ref({})
-  const disabledDate = (time) => {
-    return time.getTime() > Date.now()
-  }
+  const searchInfo = ref({
+    transactionId: undefined,
+    categoryId: undefined,
+    name: undefined,
+    date: undefined
+  })
+
   // 重置
   const onReset = () => {
-    searchInfo.value = {}
+    searchInfo.value = {
+      transactionId: undefined,
+      categoryId: undefined,
+      name: undefined,
+      date: undefined
+    }
     getTableData()
   }
 
@@ -430,7 +425,7 @@
 
   // 删除行
   const deleteRow = (row) => {
-    const tip = `确定要删除『${row.name}/${formatDate(row.date, 'yyyy-MM-dd')}』吗？`
+    const tip = `确定要删除『${formatDate(row.date, 'yyyy-MM-dd')}/${row.name}』吗？`
     ElMessageBox.confirm(tip, '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
@@ -469,6 +464,7 @@
           page.value--
         }
         await getTableData()
+        await txnItemStore.refresh()
       }
     })
   }
@@ -498,6 +494,7 @@
         page.value--
       }
       await getTableData()
+      await txnItemStore.refresh()
     }
   }
 
@@ -516,9 +513,9 @@
     formData.value = {
       transactionId: undefined,
       categoryId: undefined,
+      date: undefined,
       name: '',
-      amount: undefined,
-      date: undefined
+      amount: undefined
     }
   }
   // 弹窗确定
@@ -546,6 +543,7 @@
         })
         closeDialog()
         await getTableData()
+        await txnItemStore.refresh()
       }
     })
   }
@@ -561,13 +559,6 @@
   }
 
   // 打开详情
-  const fetchTransactionInfo = async (id) => {
-    const { code, data } = await findMiserTransaction({ id: id })
-    if (code === 0) {
-      return data
-    }
-    return {}
-  }
   const getDetails = async (row) => {
     // 打开弹窗
     const res = await findMiserTransactionItem({ id: row.id })
@@ -583,44 +574,39 @@
     detailForm.value = {}
   }
 
-  // 分类列表
-  const categoryList = ref([])
-  const categoryMap = computed(() => {
-    const resultMap = {}
-    categoryList.value.forEach(({ id, name }) => {
-      resultMap[id] = name
-    })
-    return resultMap
-  })
-  const fetchCategoryList = async () => {
-    const { code, data } = await listMiserCategoryList()
-    if (code === 0 && data && data.length > 0) {
-      categoryList.value = data
+  /********************************************************************************************************************/
+
+  // 禁用日期
+  const disabledDate = (time) => {
+    return time.getTime() > Date.now()
+  }
+
+  // 交易 ID
+  const handleBlur = async () => {
+    const { transactionId } = formData.value
+    if (!transactionId) {
+      return
+    }
+
+    const { code, data } = await findMiserTransaction({ id: transactionId })
+    if (code === 0) {
+      const { categoryId, date } = data
+      formData.value.categoryId = categoryId
+      formData.value.date = date
     } else {
-      categoryList.value = []
+      formData.value.categoryId = undefined
+      formData.value.date = undefined
     }
   }
 
-  // 明细名称列表
-  const distinctItemNames = ref([])
-  const fetchItemNameList = async () => {
-    const { code, data } = await listItemDistinctNames()
-    if (code === 0 && data && data.length > 0) {
-      distinctItemNames.value = data
-    } else {
-      distinctItemNames.value = []
-    }
-  }
+  // 交易分类
+  const catStore = useMiserCategoryStore()
 
-  watch(
-    total,
-    async () => {
-      await fetchItemNameList()
-    },
-    { immediate: true }
-  )
+  // 交易类型
+  const txnItemStore = useMiserTransactionItemStore()
 
-  onMounted(() => {
-    fetchCategoryList()
+  onMounted(async () => {
+    await catStore.init()
+    await txnItemStore.init()
   })
 </script>

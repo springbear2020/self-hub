@@ -19,14 +19,13 @@
             />
           </el-select>
         </el-form-item>
+
         <el-form-item label="完成日期" prop="finishDate">
           <el-date-picker
             v-model="searchInfo.finishDate"
             type="date"
-            style="width: 100%"
-            placeholder="选择日期"
+            placeholder="请选择"
             :disabled-date="disabledDate"
-            value-format="YYYY-MM-DDT00:00:00+08:00"
           />
         </el-form-item>
 
@@ -48,7 +47,6 @@
         <el-button icon="plus" @click="openDialog()">新增</el-button>
         <el-button
           icon="delete"
-          style="margin-left: 10px"
           :disabled="!multipleSelection.length"
           @click="onDelete"
           type="danger"
@@ -59,7 +57,6 @@
 
       <el-table
         ref="multipleTable"
-        style="width: 100%"
         tooltip-effect="dark"
         :data="tableData"
         row-key="id"
@@ -73,39 +70,31 @@
           </template>
         </el-table-column>
         <el-table-column align="center" label="完成日期" prop="finishDate">
-          <template #default="scope"
-            >{{ formatDate(scope.row.finishDate, 'yyyy-MM-dd') }}
+          <template #default="{ row }"
+            >{{ formatDate(row.finishDate, 'yyyy-MM-dd') }}
           </template>
         </el-table-column>
         <el-table-column align="center" label="计数值" prop="countValue" />
         <el-table-column align="center" label="完成说明" prop="remark" />
 
         <el-table-column align="center" label="操作" fixed="right" width="210">
-          <template #default="scope">
+          <template #default="{ row }">
             <el-button
               type="info"
+              icon="InfoFilled"
               link
-              class="table-button"
-              @click="getDetails(scope.row)"
+              @click="getDetails(row)"
             >
-              <el-icon style="margin-right: 5px">
-                <InfoFilled />
-              </el-icon>
               详情
             </el-button>
             <el-button
               type="warning"
               link
               icon="edit"
-              class="table-button"
-              @click="updateDailyTaskCompletionFunc(scope.row)"
+              @click="updateDailyTaskCompletionFunc(row)"
               >编辑
             </el-button>
-            <el-button
-              type="danger"
-              link
-              icon="delete"
-              @click="deleteRow(scope.row)"
+            <el-button type="danger" link icon="delete" @click="deleteRow(row)"
               >删除
             </el-button>
           </template>
@@ -162,12 +151,18 @@
             />
           </el-select>
         </el-form-item>
+        <el-form-item label="完成说明" prop="remark">
+          <el-input
+            v-model="formData.remark"
+            :clearable="true"
+            placeholder="请输入完成说明"
+          />
+        </el-form-item>
         <el-form-item label="完成日期" prop="finishDate">
           <el-date-picker
             v-model="formData.finishDate"
             type="date"
-            style="width: 100%"
-            placeholder="选择日期"
+            placeholder="请选择"
             :disabled-date="disabledDate"
             :clearable="false"
           />
@@ -177,15 +172,8 @@
             v-model="formData.countValue"
             :min="countValueRange[0]"
             :max="countValueRange[1]"
-            style="width: 100%"
-            placeholder="请输入任务完成计数值"
-          />
-        </el-form-item>
-        <el-form-item label="完成说明" prop="remark">
-          <el-input
-            v-model="formData.remark"
-            :clearable="true"
-            placeholder="请输入完成说明"
+            :precision="0"
+            placeholder="计数值"
           />
         </el-form-item>
       </el-form>
@@ -203,9 +191,6 @@
       <el-descriptions :column="1" border>
         <el-descriptions-item label="ID">
           {{ detailForm.id }}
-        </el-descriptions-item>
-        <el-descriptions-item label="UID">
-          {{ detailForm.userId }}
         </el-descriptions-item>
         <el-descriptions-item label="任务名称">
           {{ dailyTaskMap[detailForm.taskId] }}
@@ -247,21 +232,15 @@
     getDailyTaskCompletionList
   } from '@/api/task/daily_task_completion'
   import { listActiveTaskList } from '@/api/task/daily_task'
-  import { formatDate } from '@/utils/format'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import { ref, reactive, onMounted, computed } from 'vue'
   import { useAppStore } from '@/pinia'
-  import { InfoFilled } from '@element-plus/icons-vue'
+  import { formatDate } from '@/utils/format'
   import TaskCompletionDialog from './components/TaskCompletionDialog.vue'
 
   defineOptions({
     name: 'DailyTaskCompletion'
   })
-
-  const completionRef = ref()
-  const handleToday = () => {
-    completionRef.value.openDialog()
-  }
 
   // 提交按钮
   const btnLoading = ref(false)
@@ -273,13 +252,6 @@
     finishDate: new Date(),
     countValue: 1,
     remark: ''
-  })
-  const countValueRange = computed(() => {
-    const target = dailyTaskList.value.find(
-      (item) => item.id === formData.value.taskId
-    )
-    const { minValue = 1, maxValue = 100 } = target || {}
-    return [minValue, maxValue]
   })
 
   // 验证规则
@@ -310,6 +282,11 @@
         required: true,
         message: '',
         trigger: ['input', 'blur']
+      },
+      {
+        whitespace: true,
+        message: '不能只输入空格',
+        trigger: ['input', 'blur']
       }
     ]
   })
@@ -326,9 +303,6 @@
     taskId: undefined,
     finishDate: undefined
   })
-  const disabledDate = (time) => {
-    return time.getTime() > Date.now()
-  }
   // 重置
   const onReset = () => {
     searchInfo.value = {
@@ -538,25 +512,46 @@
     detailForm.value = {}
   }
 
+  /********************************************************************************************************************/
+
+  // 批量新增今日任务完成情况
+  const completionRef = ref()
+  const handleToday = () => {
+    completionRef.value.openDialog()
+  }
+
+  // 计数值范围
+  const countValueRange = computed(() => {
+    const target = dailyTaskList.value.find(
+      ({ id }) => id === formData.value.taskId
+    )
+    const { minValue = 1, maxValue = 100 } = target || {}
+    return [minValue, maxValue]
+  })
+
+  // 日期可选范围
+  const disabledDate = (time) => {
+    return time.getTime() > Date.now()
+  }
+
   // 任务列表
   const dailyTaskList = ref([])
   const dailyTaskMap = ref({})
-  const fetchActiveTasks = async () => {
+  const fetchTaskList = async () => {
     const { code, data } = await listActiveTaskList()
     if (code === 0) {
       dailyTaskList.value = data
-      const resultMap = {}
-      data.forEach(({ id, name }) => {
-        resultMap[id] = name
-      })
-      dailyTaskMap.value = resultMap
+      dailyTaskMap.value = data.reduce((map, { id, name }) => {
+        map[id] = name
+        return map
+      }, {})
     } else {
       dailyTaskList.value = []
       dailyTaskMap.value = {}
     }
   }
 
-  onMounted(() => {
-    fetchActiveTasks()
+  onMounted(async () => {
+    await fetchTaskList()
   })
 </script>

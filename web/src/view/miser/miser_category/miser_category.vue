@@ -12,10 +12,11 @@
         <el-form-item label="交易分类" prop="name">
           <el-input v-model="searchInfo.name" placeholder="交易分类" />
         </el-form-item>
+
         <el-form-item label="交易类型" prop="transactionType">
           <el-select v-model="searchInfo.transactionType">
             <el-option
-              v-for="t in transactionTypeList"
+              v-for="t in txnStore.dataList"
               :label="t.label"
               :value="t.value"
               :key="t.value"
@@ -40,7 +41,6 @@
         </el-button>
         <el-button
           icon="delete"
-          style="margin-left: 10px"
           :disabled="!multipleSelection.length"
           @click="onDelete"
           type="danger"
@@ -50,60 +50,49 @@
       </div>
       <el-table
         ref="multipleTable"
-        style="width: 100%"
         tooltip-effect="dark"
         :data="tableData"
         row-key="id"
         @selection-change="handleSelectionChange"
       >
         <el-table-column align="center" type="selection" width="55" />
-
         <el-table-column align="center" label="ID" prop="id" width="55" />
-
+        <el-table-column align="center" label="交易分类" prop="name" />
         <el-table-column align="center" label="交易类型" prop="transactionType">
           <template #default="{ row }">
-            {{ transactionTypeMap[row.transactionType] }}
+            <el-tag :type="miserTxnCfgMap[row.transactionType]?.tagType"
+              >{{ txnStore.dataMap[row.transactionType] }}
+            </el-tag>
           </template>
         </el-table-column>
-
-        <el-table-column align="center" label="交易分类" prop="name" />
-
         <el-table-column align="center" label="分类描述" prop="description" />
-
         <el-table-column align="center" label="排序值" prop="sort" />
 
         <el-table-column align="center" label="操作" fixed="right" width="210">
-          <template #default="scope">
+          <template #default="{ row }">
             <el-button
               type="info"
+              icon="InfoFilled"
               link
-              class="table-button"
-              @click="getDetails(scope.row)"
+              @click="getDetails(row)"
             >
-              <el-icon style="margin-right: 5px">
-                <InfoFilled />
-              </el-icon>
               详情
             </el-button>
             <el-button
               type="warning"
               link
               icon="edit"
-              class="table-button"
-              @click="updateMiserCategoryFunc(scope.row)"
+              @click="updateMiserCategoryFunc(row)"
             >
               编辑
             </el-button>
-            <el-button
-              type="danger"
-              link
-              icon="delete"
-              @click="deleteRow(scope.row)"
+            <el-button type="danger" link icon="delete" @click="deleteRow(row)"
               >删除
             </el-button>
           </template>
         </el-table-column>
       </el-table>
+
       <div class="gva-pagination">
         <el-pagination
           layout="total, sizes, prev, pager, next, jumper"
@@ -117,7 +106,7 @@
       </div>
     </div>
 
-    <!-- 新增/编辑 -->
+    <!-- 新增 / 编辑 -->
     <el-drawer
       destroy-on-close
       :size="appStore.drawerSize"
@@ -147,7 +136,7 @@
         <el-form-item label="交易类型" prop="transactionType">
           <el-select v-model="formData.transactionType">
             <el-option
-              v-for="t in transactionTypeList"
+              v-for="t in txnStore.dataList"
               :label="t.label"
               :value="t.value"
               :key="t.value"
@@ -159,7 +148,6 @@
             v-model="formData.name"
             :clearable="true"
             placeholder="请输入交易分类"
-            @blur="handleBlur"
           />
         </el-form-item>
         <el-form-item label="分类描述" prop="description">
@@ -170,7 +158,12 @@
           />
         </el-form-item>
         <el-form-item label="排序值" prop="sort">
-          <el-input-number v-model="formData.sort" placeholder="请输入排序值" />
+          <el-input-number
+            v-model="formData.sort"
+            :min="0"
+            :precision="0"
+            placeholder="排序值"
+          />
         </el-form-item>
       </el-form>
     </el-drawer>
@@ -182,23 +175,22 @@
       v-model="detailShow"
       :show-close="true"
       :before-close="closeDetailShow"
-      title="查看"
+      title="详情"
     >
       <el-descriptions :column="1" border>
         <el-descriptions-item label="ID">
           {{ detailForm.id }}
-        </el-descriptions-item>
-        <el-descriptions-item label="UID">
-          {{ detailForm.userId }}
-        </el-descriptions-item>
-        <el-descriptions-item label="交易类型">
-          {{ transactionTypeMap[detailForm.transactionType] }}
         </el-descriptions-item>
         <el-descriptions-item label="交易分类">
           {{ detailForm.name }}
         </el-descriptions-item>
         <el-descriptions-item label="分类描述">
           {{ detailForm.description }}
+        </el-descriptions-item>
+        <el-descriptions-item label="交易类型">
+          <el-tag :type="miserTxnCfgMap[detailForm.transactionType]?.tagType"
+            >{{ txnStore.dataMap[detailForm.transactionType] }}
+          </el-tag>
         </el-descriptions-item>
         <el-descriptions-item label="排序值">
           {{ detailForm.sort }}
@@ -223,13 +215,11 @@
     getMiserCategoryList,
     updateMiserCategory
   } from '@/api/miser/miser_category'
-
-  // 全量引入格式化工具 请按需保留
-  import { formatDate, getDictFunc } from '@/utils/format'
   import { ElMessage, ElMessageBox } from 'element-plus'
-  import { computed, onMounted, reactive, ref } from 'vue'
-  import { useAppStore } from '@/pinia'
-  import { InfoFilled } from '@element-plus/icons-vue'
+  import { onMounted, reactive, ref } from 'vue'
+  import { useAppStore, useMiserTransactionTypeStore } from '@/pinia'
+  import { formatDate } from '@/utils/format'
+  import { miserTxnCfgMap } from '@/constants/miser'
 
   defineOptions({
     name: 'MiserCategory'
@@ -244,7 +234,7 @@
     transactionType: undefined,
     name: '',
     description: '',
-    sort: 0
+    sort: 1
   })
 
   // 验证规则
@@ -289,12 +279,6 @@
     ]
   })
 
-  const handleBlur = () => {
-    if (type.value === 'create') {
-      formData.value.description = formData.value.name
-    }
-  }
-
   const elFormRef = ref()
   const elSearchFormRef = ref()
 
@@ -303,10 +287,16 @@
   const total = ref(0)
   const pageSize = ref(10)
   const tableData = ref([])
-  const searchInfo = ref({})
+  const searchInfo = ref({
+    name: undefined,
+    transactionType: undefined
+  })
   // 重置
   const onReset = () => {
-    searchInfo.value = {}
+    searchInfo.value = {
+      name: undefined,
+      transactionType: undefined
+    }
     getTableData()
   }
 
@@ -453,7 +443,7 @@
       transactionType: undefined,
       name: '',
       description: '',
-      sort: total.value + 1
+      sort: 1
     }
   }
   // 弹窗确定
@@ -511,26 +501,12 @@
     detailForm.value = {}
   }
 
-  // 交易类型
-  const transactionTypeList = ref([])
-  const transactionTypeMap = computed(() => {
-    const resultMap = {}
-    transactionTypeList.value.forEach(({ value, label }) => {
-      resultMap[value] = label
-    })
-    return resultMap
-  })
-  const fetchTransactionTypeList = async () => {
-    const dataList = await getDictFunc('miser_transaction_type')
-    transactionTypeList.value = dataList.map(({ value, label }) => {
-      return {
-        label: label,
-        value: parseInt(value)
-      }
-    })
-  }
+  /********************************************************************************************************************/
 
-  onMounted(() => {
-    fetchTransactionTypeList()
+  // 交易类型
+  const txnStore = useMiserTransactionTypeStore()
+
+  onMounted(async () => {
+    await txnStore.init()
   })
 </script>

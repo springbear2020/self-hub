@@ -1,74 +1,115 @@
 <script setup>
-  import { ref, watch } from 'vue'
+  import { ref, onMounted, onBeforeUnmount } from 'vue'
   import { getLineStat, getYearStat } from '@/api/miser/miser_stat'
+  import { miserCfgMap, miserTxnCfgMap } from '@/constants/miser'
+  import { useMiserStatStore } from '@/pinia'
   import { formatterAmount } from '@/utils/format'
 
-  const props = defineProps({
-    startMonth: { type: String, required: true },
-    endMonth: { type: String, required: true }
-  })
+  defineOptions({ name: 'TableSummaryStat' })
+  const emits = defineEmits(['open'])
 
-  const tableConfigs = [
+  // 状态管理
+  const { fetchData, subscribe, unsubscribe } = useMiserStatStore()
+
+  // 响应式数据
+  const tableData = ref([
     {
-      header: '结余明细 - 按月统计',
+      header: '结余汇总 - 按月统计',
+      headerId: miserCfgMap.balance.transactionType,
       cols: [
-        { key: 'month', label: '月份' },
-        { key: 'income', label: '收入' },
-        { key: 'expense', label: '支出' },
-        { key: 'balance', label: '结余' }
+        { name: 'month', label: '月份' },
+        { ...miserCfgMap.income },
+        { ...miserCfgMap.expense },
+        { ...miserCfgMap.balance }
       ],
+      rows: [],
       fetcher: getLineStat
     },
     {
-      header: '结余明细 - 按年统计',
+      header: '结余汇总 - 按年统计',
+      headerId: miserCfgMap.balance.transactionType,
       cols: [
-        { key: 'year', label: '年份' },
-        { key: 'income', label: '收入' },
-        { key: 'expense', label: '支出' },
-        { key: 'balance', label: '结余' }
+        { name: 'year', label: '年份' },
+        { ...miserCfgMap.income },
+        { ...miserCfgMap.expense },
+        { ...miserCfgMap.balance }
       ],
+      rows: [],
       fetcher: getYearStat
     }
-  ]
+  ])
 
-  const dataList = ref(tableConfigs.map((cfg) => ({ ...cfg, rows: [] })))
-  const fetchData = async () => {
-    const params = {
-      startMonth: props.startMonth,
-      endMonth: props.endMonth
+  // 模板方法
+  const handleClick = (row, headerId) => {
+    let subTitle = ''
+    // 提取 + 过滤
+    const filtered = Object.entries(row).reduce((acc, [label, value]) => {
+      if (label === 'month' || label === 'year') {
+        subTitle = value
+      } else if (value > 0) {
+        acc.push({ label: miserCfgMap[label].label, value })
+      }
+      return acc
+    }, [])
+
+    const { color, colorTo } = miserTxnCfgMap[headerId]
+
+    const chartData = {
+      title: subTitle,
+      xData: filtered.map(({ label }) => label),
+      yData: filtered.map(({ value }) => value),
+      itemColor: color,
+      areaColor: colorTo
     }
 
-    try {
-      const results = await Promise.all(
-        dataList.value.map((cfg) => cfg.fetcher(params))
+    emits('open', chartData)
+  }
+
+  // 生命周期
+  const fetchAndRender = async () => {
+    for (const tableItem of tableData.value) {
+      const { code, data } = await fetchData(
+        tableItem.fetcher.name,
+        tableItem.fetcher
       )
-      results.forEach((res, idx) => {
-        dataList.value[idx].rows = res.code === 0 ? res.data : []
-        dataList.value[idx].rows.reverse()
-      })
-    } catch (e) {
-      dataList.value.forEach((item) => (item.rows = []))
+      // data 先解构再赋值，避免 reverse 影响 store 及折线图数据
+      tableItem.rows = code === 0 && Array.isArray(data) ? [...data] : []
+      tableItem.rows.reverse()
     }
   }
 
-  watch(() => [props.startMonth, props.endMonth], fetchData, {
-    immediate: true
+  onMounted(() => {
+    fetchAndRender()
+    subscribe(getLineStat.name, fetchAndRender)
+    subscribe(getYearStat.name, fetchAndRender)
+  })
+
+  onBeforeUnmount(() => {
+    unsubscribe(getLineStat.name, fetchAndRender)
+    unsubscribe(getYearStat.name, fetchAndRender)
   })
 </script>
 
 <template>
   <div class="table-wrapper">
     <el-card
-      v-for="item in dataList"
-      :key="item.header"
-      :header="item.header"
+      v-for="{ headerId, header, rows, cols } in tableData"
+      :key="headerId"
+      :header="header"
       class="table-card"
     >
-      <el-table :data="item.rows" border stripe show-summary max-height="250px">
+      <el-table
+        :data="rows"
+        border
+        stripe
+        show-summary
+        max-height="250px"
+        @row-click="(row) => handleClick(row, headerId)"
+      >
         <el-table-column
-          v-for="c in item.cols"
-          :key="c.key"
-          :prop="c.key"
+          v-for="c in cols"
+          :key="c.name"
+          :prop="c.name"
           :label="c.label"
           :formatter="formatterAmount"
           sortable
@@ -79,16 +120,20 @@
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
   .table-wrapper {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     margin-top: 8px;
+
+    .table-card {
+      flex: 1;
+      border-radius: 16px;
+    }
   }
 
-  .table-card {
-    flex: 1;
-    border-radius: 16px;
+  :deep(.el-table__body tr:hover > td) {
+    cursor: pointer;
   }
 </style>

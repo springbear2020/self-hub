@@ -3,9 +3,8 @@
   import { ElMessage } from 'element-plus'
   import { createDailyTaskCompletion } from '@/api/task/daily_task_completion'
 
-  defineOptions({
-    name: 'TaskCompletionDialog'
-  })
+  defineOptions({ name: 'TaskCompletionDialog' })
+
   const props = defineProps({
     dailyTasks: { type: Array, required: true }
   })
@@ -13,12 +12,14 @@
 
   const formData = ref([])
   const showDialog = ref(false)
+
   const openDialog = async () => {
+    const today = new Date()
     formData.value = props.dailyTasks.map(
       ({ id, name, minValue, maxValue }) => {
         return {
           taskId: id,
-          finishDate: new Date(),
+          finishDate: today,
           countValue: minValue,
           remark: '',
 
@@ -54,7 +55,6 @@
   <el-dialog
     v-model="showDialog"
     title="批量新增今日任务完成情况"
-    :before-close="closeDialog"
     :close-on-click-modal="false"
   >
     <el-form :model="formData">
@@ -71,7 +71,7 @@
           label="计数值"
           align="center"
           prop="countValue"
-          width="180px"
+          width="180"
         >
           <template #default="{ row }">
             <el-input-number
@@ -84,7 +84,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" align="center" width="80px">
+        <el-table-column label="操作" align="center" width="80">
           <template #default="{ $index }">
             <el-button
               type="danger"

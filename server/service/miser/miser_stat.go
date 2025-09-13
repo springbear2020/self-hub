@@ -2,6 +2,7 @@ package miser
 
 import (
 	"fmt"
+	"github.com/springbear2020/self-hub/server/constants"
 	"github.com/springbear2020/self-hub/server/global"
 	"github.com/springbear2020/self-hub/server/model/miser/dto"
 	"github.com/springbear2020/self-hub/server/model/miser/request"
@@ -13,12 +14,54 @@ import (
 
 type MiserStatService struct{}
 
-const (
-	TransactionTypeIncome  = 1
-	TransactionTypeExpense = 2
-)
-
 var miserCategoryService = MiserCategoryService{}
+
+func (s *MiserStatService) GetCategoryItemStat(uid uint, req *request.MiserCategoryItemStat) ([]dto.MiserStatMonthAmount, error) {
+	var results []dto.MiserStatMonthAmount
+	err := global.GVA_DB.Raw(`
+		SELECT DATE_FORMAT(date, '%Y-%m') AS month,
+			   amount                     AS amount
+		FROM miser_transaction_items
+		WHERE user_id = ?
+		  AND category_id = ?
+		  AND name = ?
+		  AND DATE_FORMAT(date, '%Y-%m') BETWEEN ? AND ?
+		ORDER BY month;
+	`, uid, req.CategoryId, req.Name, req.StartMonth, req.EndMonth,
+	).Find(&results).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return results, nil
+}
+
+func (s *MiserStatService) GetMonthTransactionStat(uid uint, req *request.MiserTransactionStat) ([]dto.MiserStatCategoryAmount, error) {
+	miserStatReq := &request.MiserStat{
+		StartMonth: req.StartMonth,
+		EndMonth:   req.EndMonth,
+	}
+	return s.getCategoryAmount(uid, req.TransactionType, miserStatReq)
+}
+
+func (s *MiserStatService) GetCategoryStat(uid uint, req *request.MiserCategoryStat) ([]dto.MiserStatMonthAmount, error) {
+	var results []dto.MiserStatMonthAmount
+	err := global.GVA_DB.Raw(`
+		SELECT DATE_FORMAT(date, '%Y-%m') AS month,
+			   amount                     AS amount
+		FROM miser_transactions
+		WHERE user_id = ?
+		  AND category_id = ?
+		  AND DATE_FORMAT(date, '%Y-%m') BETWEEN ? AND ?
+		ORDER BY date;
+	`, uid, req.CategoryId, req.StartMonth, req.EndMonth,
+	).Find(&results).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return results, nil
+}
 
 func (s *MiserStatService) GetItemStat(uid uint, req *request.MiserStat) (map[int][]dto.MiserStatTransactionAmount, error) {
 	var results []dto.MiserStatTransactionAmount
@@ -47,37 +90,37 @@ func (s *MiserStatService) GetItemStat(uid uint, req *request.MiserStat) (map[in
 	return grouped, nil
 }
 
-func (s *MiserStatService) GetYearStat(uid uint, req *request.MiserStat) ([]dto.MiserStatYearAmount, error) {
-	var results []dto.MiserStatYearAmount
+func (s *MiserStatService) GetYearStat(uid uint, req *request.MiserStat) ([]dto.MiserStatYear, error) {
+	var results []dto.MiserStatYear
 	err := global.GVA_DB.Raw(`
 	SELECT DATE_FORMAT(date, '%Y')                                                               AS year,
-		   SUM(IF(transaction_type = 1, amount, 0))                                              AS income,
-		   SUM(IF(transaction_type = 2, amount, 0))                                              AS expense,
-		   (SUM(IF(transaction_type = 1, amount, 0)) - SUM(IF(transaction_type = 2, amount, 0))) AS balance
+		   SUM(IF(transaction_type = ?, amount, 0))                                              AS income,
+		   SUM(IF(transaction_type = ?, amount, 0))                                              AS expense,
+		   (SUM(IF(transaction_type = ?, amount, 0)) - SUM(IF(transaction_type = ?, amount, 0))) AS balance
 	FROM miser_transactions
 	WHERE user_id = ?
 	  AND DATE_FORMAT(date, '%Y') BETWEEN ? AND ?
 	GROUP BY year
 	ORDER BY year;
-	`, uid, req.StartMonth[:4], req.EndMonth[:4],
+	`, constants.TransactionTypeIncome, constants.TransactionTypeExpense, constants.TransactionTypeIncome, constants.TransactionTypeExpense, uid, req.StartMonth[:4], req.EndMonth[:4],
 	).Find(&results).Error
 	return results, err
 }
 
 func (s *MiserStatService) GetMonthStat(uid uint, req *request.MiserStat) ([]dto.TableData, error) {
 	var g errgroup.Group
-	income := dto.TableData{Header: "收入明细"}
-	expense := dto.TableData{Header: "支出明细"}
+	income := dto.TableData{HeaderId: constants.TransactionTypeIncome, Header: "收入明细"}
+	expense := dto.TableData{HeaderId: constants.TransactionTypeExpense, Header: "支出明细"}
 
 	g.Go(func() error {
 		var err error
-		income.Rows, income.Cols, err = s.getCategoryTableData(uid, req, TransactionTypeIncome)
+		income.Rows, income.Cols, err = s.getCategoryTableData(uid, req, constants.TransactionTypeIncome)
 		return err
 	})
 
 	g.Go(func() error {
 		var err error
-		expense.Rows, expense.Cols, err = s.getCategoryTableData(uid, req, TransactionTypeExpense)
+		expense.Rows, expense.Cols, err = s.getCategoryTableData(uid, req, constants.TransactionTypeExpense)
 		return err
 	})
 
@@ -88,19 +131,19 @@ func (s *MiserStatService) GetMonthStat(uid uint, req *request.MiserStat) ([]dto
 	return []dto.TableData{income, expense}, nil
 }
 
-func (s *MiserStatService) GetLineStat(uid uint, req *request.MiserStat) ([]dto.MiserStatMonthAmount, error) {
-	var results []dto.MiserStatMonthAmount
+func (s *MiserStatService) GetLineStat(uid uint, req *request.MiserStat) ([]dto.MiserStatMonth, error) {
+	var results []dto.MiserStatMonth
 	err := global.GVA_DB.Raw(`
 	SELECT DATE_FORMAT(date, '%Y-%m')                                                            AS month,
-		   SUM(IF(transaction_type = 1, amount, 0))                                              AS income,
-		   SUM(IF(transaction_type = 2, amount, 0))                                              AS expense,
-		   (SUM(IF(transaction_type = 1, amount, 0)) - SUM(IF(transaction_type = 2, amount, 0))) AS balance
+		   SUM(IF(transaction_type = ?, amount, 0))                                              AS income,
+		   SUM(IF(transaction_type = ?, amount, 0))                                              AS expense,
+		   (SUM(IF(transaction_type = ?, amount, 0)) - SUM(IF(transaction_type = ?, amount, 0))) AS balance
 	FROM miser_transactions
 	WHERE user_id = ?
 	  AND DATE_FORMAT(date, '%Y-%m') BETWEEN ? AND ?
 	GROUP BY month
 	ORDER BY month;
-	`, uid, req.StartMonth, req.EndMonth,
+	`, constants.TransactionTypeIncome, constants.TransactionTypeExpense, constants.TransactionTypeIncome, constants.TransactionTypeExpense, uid, req.StartMonth, req.EndMonth,
 	).Find(&results).Error
 	return results, err
 }
@@ -111,13 +154,13 @@ func (s *MiserStatService) GetPieStat(uid uint, req *request.MiserStat) (map[str
 
 	g.Go(func() error {
 		var err error
-		incomes, err = s.getCategoryAmount(uid, TransactionTypeIncome, req)
+		incomes, err = s.getCategoryAmount(uid, constants.TransactionTypeIncome, req)
 		return err
 	})
 
 	g.Go(func() error {
 		var err error
-		expenses, err = s.getCategoryAmount(uid, TransactionTypeExpense, req)
+		expenses, err = s.getCategoryAmount(uid, constants.TransactionTypeExpense, req)
 		return err
 	})
 
@@ -137,13 +180,13 @@ func (s *MiserStatService) GetCardStat(uid uint, req *request.MiserStat) (map[st
 
 	g.Go(func() error {
 		var err error
-		totalIncome, err = s.getTotalAmount(uid, TransactionTypeIncome, req)
+		totalIncome, err = s.getTotalAmount(uid, constants.TransactionTypeIncome, req)
 		return err
 	})
 
 	g.Go(func() error {
 		var err error
-		totalExpense, err = s.getTotalAmount(uid, TransactionTypeExpense, req)
+		totalExpense, err = s.getTotalAmount(uid, constants.TransactionTypeExpense, req)
 		return err
 	})
 

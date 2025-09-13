@@ -145,6 +145,7 @@ export const CreateUUID = () => {
   })
 }
 
+// el-descriptions-item
 export const formatAmount = (value) => {
   let num = Number(value)
   if (isNaN(num)) {
@@ -154,6 +155,14 @@ export const formatAmount = (value) => {
   return num.toFixed(2)
 }
 
-export const formatterAmount = (row, column, cellValue, rowIndex) => {
+// el-table-column
+export const formatterAmount = (row, column, cellValue) => {
   return column.no === 0 ? cellValue : formatAmount(cellValue)
 }
+
+// charts and dialogs
+export const formatAmountCurrency = (value, currency = 'CNY') =>
+  new Intl.NumberFormat('zh-CN', {
+    style: 'currency',
+    currency: currency
+  }).format(value ?? 0)

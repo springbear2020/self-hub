@@ -55,9 +55,10 @@ export const listMiserLoanNameList = () => {
   })
 }
 
-export const getMiserLoanStatData = () => {
+export const getMiserLoanStatData = (params) => {
   return service({
     url: '/miserLoanRecord/getMiserLoanStatData',
-    method: 'get'
+    method: 'get',
+    params
   })
 }

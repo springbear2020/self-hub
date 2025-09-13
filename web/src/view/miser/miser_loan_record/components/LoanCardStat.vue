@@ -1,47 +1,78 @@
 <script setup>
-  import { markRaw, nextTick, ref } from 'vue'
-  import { Money, TrendCharts, Wallet } from '@element-plus/icons-vue'
-  import config from '@/core/config'
+  import { ref, onMounted } from 'vue'
   import { getMiserLoanStatData } from '@/api/miser/miser_loan_record'
   import AmountCard from '@/components/AmountCard.vue'
+  import { miserCfgMap } from '@/constants/miser'
+  import { formatAmountCurrency } from '@/utils/format'
 
-  const amountCardRef = ref()
-  const cardConfig = [
+  defineOptions({ name: 'LoanCardStat' })
+  const emits = defineEmits(['open'])
+
+  // 响应式数据
+  const cardRef = ref()
+  const cardList = ref([
     {
-      title: 'lend_amount',
-      label: '总借出',
-      icon: markRaw(Money),
-      colorFrom: config.miser.expense.color,
-      colorTo: config.miser.expense.colorTo
+      ...miserCfgMap.income,
+      name: 'repaid_amount',
+      label: '总归还'
     },
     {
-      title: 'repaid_amount',
-      label: '总归还',
-      icon: markRaw(TrendCharts),
-      colorFrom: config.miser.balance.color,
-      colorTo: config.miser.balance.colorTo
+      ...miserCfgMap.expense,
+      name: 'lend_amount',
+      label: '总借出'
     },
     {
-      title: 'repaying_amount',
-      label: '待还款',
-      icon: markRaw(Wallet),
-      colorFrom: config.miser.income.color,
-      colorTo: config.miser.income.colorTo
+      ...miserCfgMap.balance,
+      name: 'repaying_amount',
+      label: '待还款'
     }
-  ]
-  const fetchAndRender = () => {
-    nextTick(() => {
-      amountCardRef.value.fetchAndRender()
-    })
+  ])
+
+  // 模板方法
+  const handleClick = async (cardData) => {
+    const { code, data } = await getMiserLoanStatData({ useGroup: true })
+    if (code !== 0 || !Array.isArray(data)) {
+      return
+    }
+
+    const { label, amount, color, colorTo, name: key } = cardData
+
+    // 过滤零值项并降序排列
+    const filterSorted = data
+      .filter((item) => item[key] > 0)
+      .sort((a, b) => b[key] - a[key])
+
+    const chartData = {
+      title: `『${label}』${formatAmountCurrency(amount)}`,
+      xData: filterSorted.map(({ name }) => name),
+      yData: filterSorted.map((item) => item[key]),
+      itemColor: color,
+      areaColor: colorTo
+    }
+
+    emits('open', chartData)
   }
+
+  // 生命周期
+  const fetchAndRender = async () => {
+    const { code, data } = await getMiserLoanStatData()
+    if (code !== 0 || !data) {
+      return
+    }
+
+    cardList.value.forEach((item) => {
+      item.amount = data[item.name] ?? 0
+      item.current = 0
+    })
+
+    cardRef.value.doRender(cardList.value)
+  }
+
+  onMounted(fetchAndRender)
 
   defineExpose({ fetchAndRender })
 </script>
 
 <template>
-  <amount-card
-    ref="amountCardRef"
-    :api-func="getMiserLoanStatData"
-    :card-config="cardConfig"
-  />
+  <amount-card ref="cardRef" :data-list="cardList" @click="handleClick" />
 </template>
