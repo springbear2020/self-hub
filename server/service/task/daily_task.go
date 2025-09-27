@@ -5,6 +5,7 @@ import (
 	"github.com/springbear2020/self-hub/server/global"
 	"github.com/springbear2020/self-hub/server/model/task"
 	"github.com/springbear2020/self-hub/server/model/task/request"
+	"gorm.io/gorm"
 )
 
 type DailyTaskService struct{}
@@ -16,12 +17,18 @@ func (dailyTaskService *DailyTaskService) CreateDailyTask(uid uint, dailyTask *t
 }
 
 func (dailyTaskService *DailyTaskService) DeleteDailyTask(uid uint, id string) (err error) {
-	err = global.GVA_DB.Delete(&task.DailyTask{}, "user_id = ? AND id = ?", uid, id).Error
-	return err
+	return dailyTaskService.DeleteDailyTaskByIds(uid, []string{id})
 }
 
 func (dailyTaskService *DailyTaskService) DeleteDailyTaskByIds(uid uint, ids []string) (err error) {
-	err = global.GVA_DB.Delete(&[]task.DailyTask{}, "user_id = ? AND id in ?", uid, ids).Error
+	err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
+		// 删除任务时删除任务完成情况
+		iErr := tx.Delete(&task.DailyTask{}, "user_id = ? AND id IN ?", uid, ids).Error
+		if iErr != nil {
+			return iErr
+		}
+		return tx.Delete(&task.DailyTaskCompletion{}, "user_id = ? AND task_id IN ?", uid, ids).Error
+	})
 	return err
 }
 

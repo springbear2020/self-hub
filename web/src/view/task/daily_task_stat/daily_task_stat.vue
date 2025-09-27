@@ -68,9 +68,10 @@
   function mapTaskData(data) {
     return data.map(({ task, completions }) => ({
       ...task,
-      completions: completions.map(({ finishDate, countValue }) => [
+      completions: completions.map(({ finishDate, countValue, remark }) => [
         finishDate,
-        countValue > 0 ? countValue : null
+        countValue > 0 ? countValue : null,
+        remark
       ])
     }))
   }

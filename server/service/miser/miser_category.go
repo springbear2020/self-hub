@@ -4,6 +4,7 @@ import (
 	"github.com/springbear2020/self-hub/server/global"
 	"github.com/springbear2020/self-hub/server/model/miser"
 	"github.com/springbear2020/self-hub/server/model/miser/request"
+	"gorm.io/gorm"
 )
 
 type MiserCategoryService struct{}
@@ -15,12 +16,22 @@ func (miserCategoryService *MiserCategoryService) CreateMiserCategory(uid uint, 
 }
 
 func (miserCategoryService *MiserCategoryService) DeleteMiserCategory(uid uint, id string) (err error) {
-	err = global.GVA_DB.Delete(&miser.MiserCategory{}, "user_id = ? AND id = ?", uid, id).Error
-	return err
+	return miserCategoryService.DeleteMiserCategoryByIds(uid, []string{id})
 }
 
 func (miserCategoryService *MiserCategoryService) DeleteMiserCategoryByIds(uid uint, ids []string) (err error) {
-	err = global.GVA_DB.Delete(&[]miser.MiserCategory{}, "user_id = ? AND id in ?", uid, ids).Error
+	err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
+		// 删除交易分类时删除交易流水和流水明细
+		iErr := tx.Delete(&miser.MiserCategory{}, "user_id = ? AND id IN ?", uid, ids).Error
+		if iErr != nil {
+			return iErr
+		}
+		iErr = tx.Delete(&miser.MiserTransaction{}, "user_id = ? AND category_id IN ?", uid, ids).Error
+		if iErr != nil {
+			return iErr
+		}
+		return tx.Delete(&miser.MiserTransactionItem{}, "user_id = ? AND category_id IN ?", uid, ids).Error
+	})
 	return err
 }
 

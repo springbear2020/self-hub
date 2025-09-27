@@ -10,7 +10,7 @@
       <div class="logo-area">
         <img class="logo-img" :src="$GIN_VUE_ADMIN.appLogo" alt="Logo" />
         <h1 class="app-name">{{ $GIN_VUE_ADMIN.appName }}</h1>
-        <p class="app-desc">SelfHub - 安放您数字生活的私密一隅</p>
+        <p class="app-desc">静享管理之乐，安放数字生活</p>
       </div>
 
       <el-form
@@ -340,7 +340,7 @@
 
   .captcha-container {
     display: flex;
-    gap: 12px;
+    gap: 24px;
 
     .captcha-input {
       flex: 1;
@@ -348,7 +348,6 @@
 
     .captcha-image {
       flex-shrink: 0;
-      width: 120px;
       height: 44px;
       background: #c3d4f2;
       border-radius: 10px;

@@ -96,6 +96,7 @@ func (taskCompletionService *DailyTaskCompletionService) GetDailyTaskStatInfoLis
 		for i, c := range taskCompletions {
 			completions[i].FinishDate = c.FinishDate.Format("2006-01-02")
 			completions[i].CountValue = *c.CountValue
+			completions[i].Remark = *c.Remark
 		}
 		list = append(list, dto.DailyTaskStat{
 			Task:        t,

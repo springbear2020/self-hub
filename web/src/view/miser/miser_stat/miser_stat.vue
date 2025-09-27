@@ -1,5 +1,5 @@
 <script setup>
-  import { computed, ref, defineAsyncComponent, watch } from 'vue'
+  import { computed, ref, defineAsyncComponent, watch, onBeforeUnmount } from 'vue'
   import LazyWrapper from '@/components/LazyWrapper.vue'
   import LineBarDialog from '@/components/LineBarDialog.vue'
   import { formatDate } from '@/utils/format'
@@ -31,7 +31,7 @@
   )
 
   // 状态管理
-  const { setRange } = useMiserStatStore()
+  const { setRange, clearCache } = useMiserStatStore()
 
   // 响应式数据
   const monthRange = ref([new Date(MIN_YEAR, MIN_MONTH), new Date()])
@@ -79,6 +79,9 @@
   const handleOpen = (chartData) => {
     dialogRef.value.openDialog(chartData)
   }
+
+  // 生命周期
+  onBeforeUnmount(clearCache)
 </script>
 
 <template>

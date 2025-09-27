@@ -149,6 +149,15 @@ export const useMiserStatStore = defineStore('miserStatStore', () => {
     subscribers[apiKey]?.delete(cb)
   }
 
+  /**
+   * 清除所有缓存和请求
+   */
+  const clearCache = () => {
+    Object.keys(cache).forEach((k) => delete cache[k])
+    Object.keys(inFlight).forEach((k) => delete inFlight[k])
+    debouncedNotify()
+  }
+
   /** ================================
    *  导出
    * ================================ */
@@ -158,6 +167,7 @@ export const useMiserStatStore = defineStore('miserStatStore', () => {
     setRange,
     fetchData,
     subscribe,
-    unsubscribe
+    unsubscribe,
+    clearCache
   }
 })

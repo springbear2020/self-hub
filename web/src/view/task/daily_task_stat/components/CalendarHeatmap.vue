@@ -47,7 +47,12 @@
     chartInstance.setOption({
       title: { top: 20, left: 'center', text: title },
       tooltip: {
-        formatter: ({ value }) => `${value[0]}：${value[1]}`
+        formatter: ({ value, data }) => {
+          const [date = '', count = 0] = value
+          const dateStr = date ? date.slice(5) : ''
+          const remark = data.remark?.replace(/\n/g, '<br/>') ?? ''
+          return `${dateStr}: ${count}<br/>${remark}`
+        }
       },
       visualMap: {
         min: min,
@@ -92,13 +97,16 @@
   function getFullYearData(year, rawData) {
     const start = new Date(year, 0, 1)
     const end = new Date(year, 11, 31)
-    const mapData = new Map(rawData.map((item) => [item[0], item[1]]))
+    const mapData = new Map(
+      rawData.map((item) => [item[0], { count: item[1], remark: item[2] }])
+    )
 
     const results = []
     let cur = new Date(start)
     while (cur <= end) {
       const dateStr = cur.toISOString().slice(0, 10)
-      results.push([dateStr, mapData.get(dateStr)])
+      const { count, remark } = mapData.get(dateStr) || { count: null, remark: null }
+      results.push({ value: [dateStr, count], remark })
       cur.setDate(cur.getDate() + 1)
     }
 

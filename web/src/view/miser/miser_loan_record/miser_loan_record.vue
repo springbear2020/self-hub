@@ -270,6 +270,14 @@
             :disabled="!renderRepayItem"
             placeholder="归还金额"
           />
+          <el-button
+            link
+            type="primary"
+            icon="DocumentCopy"
+            title="全额归还"
+            style="margin-left: 8px"
+            @click="handleFullRepay"
+          />
         </el-form-item>
       </el-form>
     </el-drawer>
@@ -710,6 +718,7 @@
     const { code, data } = await findMiserLoanRecord({ id: row.id })
     if (code === 0) {
       formData.value = data
+      formData.value.repayDate = new Date()
       dialogFormVisible.value = true
     }
   }
@@ -718,6 +727,9 @@
   })
   const disableRepay = ({ fundStatus }) => {
     return fundStatus === miserLoanCfgMap.repaid
+  }
+  const handleFullRepay = () => {
+    formData.value.repayAmount = formData.value.lendAmount
   }
 
   // 结清耗时

@@ -75,7 +75,11 @@
           </template>
         </el-table-column>
         <el-table-column align="center" label="计数值" prop="countValue" />
-        <el-table-column align="center" label="完成说明" prop="remark" />
+        <el-table-column align="center" label="完成说明" prop="remark">
+          <template #default="{ row }">
+            <multiline-text :text="row.remark" />
+          </template>
+        </el-table-column>
 
         <el-table-column align="center" label="操作" fixed="right" width="210">
           <template #default="{ row }">
@@ -154,8 +158,11 @@
         <el-form-item label="完成说明" prop="remark">
           <el-input
             v-model="formData.remark"
-            :clearable="true"
             placeholder="请输入完成说明"
+            type="textarea"
+            maxlength="250"
+            show-word-limit
+            autosize
           />
         </el-form-item>
         <el-form-item label="完成日期" prop="finishDate">
@@ -202,7 +209,7 @@
           {{ detailForm.countValue }}
         </el-descriptions-item>
         <el-descriptions-item label="完成说明">
-          {{ detailForm.remark }}
+          <multiline-text :text="detailForm.remark" />
         </el-descriptions-item>
         <el-descriptions-item label="创建时间">
           {{ formatDate(detailForm.createdAt) }}
@@ -237,6 +244,7 @@
   import { useAppStore } from '@/pinia'
   import { formatDate } from '@/utils/format'
   import TaskCompletionDialog from './components/TaskCompletionDialog.vue'
+  import MultilineText from '@/components/MultilineText.vue'
 
   defineOptions({
     name: 'DailyTaskCompletion'

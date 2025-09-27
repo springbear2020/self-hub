@@ -10,4 +10,5 @@ type DailyTaskStat struct {
 type DailyTaskStatCompletion struct {
 	FinishDate string `json:"finishDate"`
 	CountValue int    `json:"countValue"`
+	Remark     string `json:"remark"`
 }
