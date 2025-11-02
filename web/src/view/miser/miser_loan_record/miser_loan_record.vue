@@ -277,6 +277,7 @@
             title="全额归还"
             style="margin-left: 8px"
             @click="handleFullRepay"
+            :disabled="!renderRepayItem"
           />
         </el-form-item>
       </el-form>

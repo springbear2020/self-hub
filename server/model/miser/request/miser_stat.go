@@ -7,16 +7,16 @@ type MiserStat struct {
 
 type MiserCategoryStat struct {
 	MiserStat
-	CategoryId int `json:"categoryId" form:"categoryId" binding:"required"`
+	CategoryId int `json:"categoryId" form:"categoryId"`
 }
 
 type MiserTransactionStat struct {
 	MiserStat
-	TransactionType int `json:"transactionType" form:"transactionType" binding:"required"`
+	TransactionType int `json:"transactionType" form:"transactionType"`
 }
 
 type MiserCategoryItemStat struct {
 	MiserStat
-	CategoryId int    `json:"categoryId" form:"categoryId" binding:"required"`
-	Name       string `json:"name" form:"name" binding:"required"`
+	CategoryId int    `json:"categoryId" form:"categoryId"`
+	Name       string `json:"name" form:"name"`
 }

@@ -71,3 +71,11 @@ export const getCategoryItemStat = (params) => {
     params
   })
 }
+
+export const getRankingStat = (params) => {
+  return service({
+    url: 'miserStat/getRankingStat',
+    method: 'get',
+    params
+  })
+}

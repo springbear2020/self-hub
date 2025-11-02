@@ -12,6 +12,25 @@ import (
 type MiserStatApi struct {
 }
 
+func (a *MiserStatApi) GetRankingStat(c *gin.Context) {
+	var req request.MiserCategoryStat
+	err := c.ShouldBindQuery(&req)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+
+	uid := utils.GetUserID(c)
+	result, err := miserStatService.GetRankingStat(uid, &req)
+	if err != nil {
+		global.GVA_LOG.Error("查询失败!", zap.Error(err))
+		response.FailWithMessage("查询失败:"+err.Error(), c)
+		return
+	}
+
+	response.OkWithData(result, c)
+}
+
 func (a *MiserStatApi) GetCardStat(c *gin.Context) {
 	var req request.MiserStat
 	err := c.ShouldBindQuery(&req)

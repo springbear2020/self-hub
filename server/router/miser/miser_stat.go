@@ -17,6 +17,7 @@ func (s *MiserCategoryRouter) InitMiserStatRouter(privateRouter *gin.RouterGroup
 		withoutRecord.GET("getCategoryStat", miserStatApi.GetCategoryStat)
 		withoutRecord.GET("getMonthTransactionStat", miserStatApi.GetMonthTransactionStat)
 		withoutRecord.GET("getCategoryItemStat", miserStatApi.GetCategoryItemStat)
+		withoutRecord.GET("getRankingStat", miserStatApi.GetRankingStat)
 	}
 
 	withoutAuth := publicRouter.Group("miserStat")

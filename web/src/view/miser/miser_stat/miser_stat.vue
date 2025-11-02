@@ -1,5 +1,11 @@
 <script setup>
-  import { computed, ref, defineAsyncComponent, watch, onBeforeUnmount } from 'vue'
+  import {
+    computed,
+    ref,
+    defineAsyncComponent,
+    watch,
+    onBeforeUnmount
+  } from 'vue'
   import LazyWrapper from '@/components/LazyWrapper.vue'
   import LineBarDialog from '@/components/LineBarDialog.vue'
   import { formatDate } from '@/utils/format'
@@ -28,6 +34,9 @@
   )
   const TableItemStat = defineAsyncComponent(
     () => import('./components/TableItemStat.vue')
+  )
+  const TableRankingStat = defineAsyncComponent(
+    () => import('./components/TableRankingStat.vue')
   )
 
   // 状态管理
@@ -123,6 +132,10 @@
 
     <lazy-wrapper>
       <table-item-stat @open="handleOpen" />
+    </lazy-wrapper>
+
+    <lazy-wrapper>
+      <table-ranking-stat @open="handleOpen" />
     </lazy-wrapper>
 
     <div class="no-more-text">没有更多了</div>

@@ -10,6 +10,7 @@
   import { miserCfgMap, miserTxnCfgMap } from '@/constants/miser'
   import { useMiserCategoryStore, useMiserStatStore } from '@/pinia'
   import { formatAmountCurrency } from '@/utils/format'
+  import { storeToRefs } from 'pinia'
 
   defineOptions({ name: 'PieStat' })
   const emits = defineEmits(['open'])
@@ -26,10 +27,11 @@
     label: balanceLabel
   } = miserCfgMap.balance
 
-  // 状态管理
+  // 状态管理，用 storeToRefs 让解构后的值保持响应式
   const catStore = useMiserCategoryStore()
   const statStore = useMiserStatStore()
-  const { fetchData, subscribe, unsubscribe, startMonth, endMonth } = statStore
+  const { fetchData, subscribe, unsubscribe } = statStore
+  const { startMonth, endMonth } = storeToRefs(statStore)
 
   // 图表逻辑
   let incomeInstance, expenseInstance, balanceInstance
@@ -128,7 +130,7 @@
     const { color, colorTo } = miserTxnCfgMap[transactionType]
 
     const chartData = {
-      title: `${startMonth} 至 ${endMonth}『${name}』${formatAmountCurrency(value)}`,
+      title: `${startMonth.value} 至 ${endMonth.value}『${name}』${formatAmountCurrency(value)}`,
       xData: data.map(({ month }) => month),
       yData: data.map(({ amount }) => amount),
       itemColor: color,
@@ -150,7 +152,7 @@
     const key = miserTxnCfgMap[transactionType].name
 
     const chartData = {
-      title: `${startMonth} 至 ${endMonth}『${name}』${formatAmountCurrency(value)}`,
+      title: `${startMonth.value} 至 ${endMonth.value}『${name}』${formatAmountCurrency(value)}`,
       xData: data.map(({ month }) => month),
       yData: data.map((item) => item[key]),
       itemColor: color,

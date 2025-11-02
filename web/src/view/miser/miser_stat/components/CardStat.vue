@@ -5,13 +5,15 @@
   import { miserCfgMap, miserTxnCfgMap } from '@/constants/miser'
   import { useMiserStatStore } from '@/pinia'
   import { formatAmountCurrency } from '@/utils/format'
+  import { storeToRefs } from 'pinia'
 
   defineOptions({ name: 'CardStat' })
   const emits = defineEmits(['open'])
 
-  // 状态管理
-  const { fetchData, subscribe, unsubscribe, startMonth, endMonth } =
-    useMiserStatStore()
+  // 状态管理，用 storeToRefs 让解构后的值保持响应式
+  const statStore = useMiserStatStore()
+  const { fetchData, subscribe, unsubscribe } = statStore
+  const { startMonth, endMonth } = storeToRefs(statStore)
 
   // 响应式数据
   const cardRef = ref()
@@ -41,7 +43,7 @@
     const { color, colorTo, name: key } = miserTxnCfgMap[transactionType]
 
     const chartData = {
-      title: `${startMonth} 至 ${endMonth}『${label}』${formatAmountCurrency(amount)}`,
+      title: `${startMonth.value} 至 ${endMonth.value}『${label}』${formatAmountCurrency(amount)}`,
       xData: data.map(({ month }) => month),
       yData: data.map((item) => item[key]),
       itemColor: color,

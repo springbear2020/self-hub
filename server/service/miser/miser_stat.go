@@ -16,6 +16,35 @@ type MiserStatService struct{}
 
 var miserCategoryService = MiserCategoryService{}
 
+func (s *MiserStatService) GetRankingStat(uid uint, req *request.MiserCategoryStat) (map[int][]dto.MiserStatRankingAmount, error) {
+	var g errgroup.Group
+
+	var (
+		incomes  []dto.MiserStatRankingAmount
+		expenses []dto.MiserStatRankingAmount
+	)
+
+	g.Go(func() error {
+		var err error
+		incomes, err = s.getRankingAmount(uid, constants.TransactionTypeIncome, req)
+		return err
+	})
+	g.Go(func() error {
+		var err error
+		expenses, err = s.getRankingAmount(uid, constants.TransactionTypeExpense, req)
+		return err
+	})
+
+	if err := g.Wait(); err != nil {
+		return nil, err
+	}
+
+	return map[int][]dto.MiserStatRankingAmount{
+		constants.TransactionTypeIncome:  incomes,
+		constants.TransactionTypeExpense: expenses,
+	}, nil
+}
+
 func (s *MiserStatService) GetCategoryItemStat(uid uint, req *request.MiserCategoryItemStat) ([]dto.MiserStatMonthAmount, error) {
 	var results []dto.MiserStatMonthAmount
 	err := global.GVA_DB.Raw(`
@@ -293,4 +322,34 @@ func (s *MiserStatService) getTotalAmount(uid uint, transactionType int, req *re
 	`, uid, transactionType, req.StartMonth, req.EndMonth,
 	).Scan(&amount).Error
 	return amount, err
+}
+
+func (s *MiserStatService) getRankingAmount(uid uint, transactionType int, req *request.MiserCategoryStat) ([]dto.MiserStatRankingAmount, error) {
+	var results []dto.MiserStatRankingAmount
+
+	// 基础 SQL
+	query := `
+	SELECT category_id, name, amount, date
+	FROM miser_ranking_records
+	WHERE user_id = ?
+	  AND transaction_type = ?
+	  AND DATE_FORMAT(date, '%Y-%m') BETWEEN ? AND ?
+	`
+
+	// 动态参数列表
+	args := []interface{}{uid, transactionType, req.StartMonth, req.EndMonth}
+
+	// 如果有分类条件
+	if req.CategoryId != 0 {
+		query += " AND category_id = ?"
+		args = append(args, req.CategoryId)
+	}
+
+	// 排序
+	query += " ORDER BY amount DESC;"
+
+	// 执行查询
+	err := global.GVA_DB.Raw(query, args...).Find(&results).Error
+
+	return results, err
 }

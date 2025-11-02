@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="https://img.shields.io/static/v1?label=%E5%BC%80%E5%8F%91%E6%97%B6%E9%97%B4&message=25/08-至今&color=007bff"/>
+    <img src="https://img.shields.io/static/v1?label=%E5%BC%80%E5%8F%91%E6%97%B6%E9%97%B4&message=25/08&color=007bff"/>
     <img src="https://img.shields.io/static/v1?label=Go&message=1.23.9&color=dc3545"/>
     <img src="https://img.shields.io/static/v1?label=Vue&message=3.5.7&color=ffc107"/>
     <img src="https://img.shields.io/static/v1?label=Gin-Vue-Admin&message=2.8.4&color=17a2b8"/> 
@@ -7,8 +7,6 @@
         <img src="https://img.shields.io/static/v1?label=%E5%BC%80%E6%BA%90%E9%A1%B9%E7%9B%AE&message=self-hub&color=18a745"/>
     </a>
 </p>
-
-[TOC]
 
 # SelfHub（一隅）
 
@@ -128,6 +126,7 @@ $ npm run dev
 1. 日常账单：每日使用支付宝/微信记账本进行日常账单记录
 2. 月度汇总：每月录入分类收支流水，系统自动生成统计看板
 3. 明细追踪：对重点关注分类可进一步录入明细数据（如餐饮分三餐、社交分对象）
+4. 收支榜单：重点记录单笔金额超过 `500` 元的非刚性收支，并参与榜单排名，助您对大额收支洞若观火
 
 #### 统计看板
 
@@ -185,13 +184,23 @@ $ npm run dev
 
 6. 明细汇总表格
 
-   - 按交易分类和对象统计汇总
+   - 按交易分类和名称对象统计汇总
 
      ![](./docs/images/16-守财奴-明细表格.png)
 
    - 点击行查看月度明细趋势
 
      ![](./docs/images/17-守财奴-明细表格-弹框.png)
+
+7. 收支榜单表格
+
+   - 按交易类型分类金额倒序统计
+
+     ![](./docs/images/25-守财奴-收支榜单-表格.png)
+
+   - 点击行查看日期范围内交易分类趋势
+
+     ![](./docs/images/26-守财奴-收支榜单-弹框.png)
 
 #### 分类列表
 
@@ -230,6 +239,13 @@ $ npm run dev
 
 ![](./docs/images/24-守财奴-资金借还-弹框.png)
 
+#### 收支榜单
+
+- 重点记录单笔金额超过 `500` 元的非刚性收支
+- 参与榜单排名，助您对大额收支洞若观火
+
+![](./docs/images/27-守财奴-收支榜单.png)
+
 ## 💝 捐赠支持
 
 如果 `SelfHub` 对您有所帮助，欢迎通过捐赠支持项目的持续开发与维护。您的每一份支持都是我前进的动力！
@@ -264,5 +280,5 @@ $ npm run dev
 
 ---
 
-<p align="center" style="color: #00ccc6">静享管理之乐，安放数字生活</p>
-<p align="center" style="color: #00ccc6">SelfHub 守护您的每一处细节</p>
+<p align="center"><font color="#00ccc6">静享管理之乐，安放数字生活</font></p>
+<p align="center"><font color="#00ccc6">SelfHub 守护您的每一处细节</font></p>

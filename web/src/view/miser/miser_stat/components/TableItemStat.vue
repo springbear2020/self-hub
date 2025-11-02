@@ -4,13 +4,15 @@
   import { miserTxnCfgMap } from '@/constants/miser'
   import { useMiserCategoryStore, useMiserStatStore } from '@/pinia'
   import { formatAmountCurrency, formatterAmount } from '@/utils/format'
+  import { storeToRefs } from 'pinia'
 
   defineOptions({ name: 'TableItemStat' })
   const emits = defineEmits(['open'])
 
-  // 状态管理
-  const { fetchData, subscribe, unsubscribe, startMonth, endMonth } =
-    useMiserStatStore()
+  // 状态管理，用 storeToRefs 让解构后的值保持响应式
+  const statStore = useMiserStatStore()
+  const { fetchData, subscribe, unsubscribe } = statStore
+  const { startMonth, endMonth } = storeToRefs(statStore)
   const catStore = useMiserCategoryStore()
 
   // 响应式数据
@@ -32,7 +34,7 @@
     const { color, colorTo } = miserTxnCfgMap[transactionType]
 
     const chartData = {
-      title: `${startMonth} 至 ${endMonth}『${name}』${formatAmountCurrency(amount)}`,
+      title: `${startMonth.value} 至 ${endMonth.value}『${name}』${formatAmountCurrency(amount)}`,
       xData: data.map(({ month }) => month),
       yData: data.map(({ amount }) => amount),
       itemColor: color,

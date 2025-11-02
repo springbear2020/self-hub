@@ -8,6 +8,7 @@ type ApiGroup struct {
 	MiserTransactionItemApi
 	MiserStatApi
 	MiserLoanRecordApi
+	MiserRankingRecordApi
 }
 
 var (
@@ -16,4 +17,5 @@ var (
 	miserTransactionItemService = service.ServiceGroupApp.MiserServiceGroup.MiserTransactionItemService
 	miserStatService            = service.ServiceGroupApp.MiserServiceGroup.MiserStatService
 	miserLoanRecordService      = service.ServiceGroupApp.MiserServiceGroup.MiserLoanRecordService
+	miserRankingRecordService   = service.ServiceGroupApp.MiserServiceGroup.MiserRankingRecordService
 )

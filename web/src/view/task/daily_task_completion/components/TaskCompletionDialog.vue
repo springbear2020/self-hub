@@ -63,7 +63,14 @@
 
         <el-table-column label="完成说明" align="center" prop="remark">
           <template #default="{ row }">
-            <el-input v-model="row.remark" placeholder="请输入任务完成说明" />
+            <el-input
+              v-model="row.remark"
+              placeholder="请输入任务完成说明"
+              type="textarea"
+              maxlength="250"
+              show-word-limit
+              autosize
+            />
           </template>
         </el-table-column>
 
