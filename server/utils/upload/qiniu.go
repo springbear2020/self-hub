@@ -5,11 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"mime/multipart"
+	"path/filepath"
 	"time"
 
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/springbear2020/self-hub/server/global"
+	"github.com/springbear2020/self-hub/server/utils"
 	"go.uber.org/zap"
 )
 
@@ -39,8 +41,17 @@ func (*Qiniu) UploadFile(file *multipart.FileHeader) (string, string, error) {
 
 		return "", "", errors.New("function file.Open() failed, err:" + openError.Error())
 	}
-	defer f.Close()                                                  // 创建文件 defer 关闭
-	fileKey := fmt.Sprintf("%d%s", time.Now().Unix(), file.Filename) // 文件名格式 自己可以改 建议保证唯一性
+	defer f.Close() // 创建文件 defer 关闭
+
+	now := time.Now()
+	year := now.Format("2006")
+	date := now.Format("0601")
+	md5, err := utils.CalculateMultipartFileMD5(f)
+	if err != nil {
+		return "", "", err
+	}
+	fileName := fmt.Sprintf("%s%s", md5, filepath.Ext(file.Filename))
+	fileKey := fmt.Sprintf("%s/%s/%s", year, date, fileName)
 	putErr := formUploader.Put(context.Background(), &ret, upToken, fileKey, f, file.Size, &putExtra)
 	if putErr != nil {
 		global.GVA_LOG.Error("function formUploader.Put() failed", zap.Any("err", putErr.Error()))

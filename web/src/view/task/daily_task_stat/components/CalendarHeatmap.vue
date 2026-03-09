@@ -84,7 +84,7 @@
 
   const renderChart = () => {
     const { name, minValue, maxValue } = props.task
-    const data = getFullYearData(props.year, props.completions)
+    const data = getFullYearData(props.year, props.completions, maxValue)
     updateChart({
       title: name,
       min: minValue,
@@ -94,23 +94,37 @@
   }
 
   // ==== 工具函数 ====
-  function getFullYearData(year, rawData) {
+  function getFullYearData(year, rawData, maxValue) {
     const start = new Date(year, 0, 1)
     const end = new Date(year, 11, 31)
-    const mapData = new Map(
-      rawData.map((item) => [item[0], { count: item[1], remark: item[2] }])
+    const dataMap = new Map(
+      rawData.map(([date, count, remark]) => [date, { count, remark }])
     )
 
     const results = []
-    let cur = new Date(start)
-    while (cur <= end) {
-      const dateStr = cur.toISOString().slice(0, 10)
-      const { count, remark } = mapData.get(dateStr) || { count: null, remark: null }
-      results.push({ value: [dateStr, count], remark })
+    for (
+      let cur = new Date(start);
+      cur <= end;
       cur.setDate(cur.getDate() + 1)
+    ) {
+      const dateStr = formatDateLocal(cur)
+      const { count = null, remark = null } = dataMap.get(dateStr) || {}
+
+      const overflow = count != null && count > maxValue
+      results.push({
+        value: [dateStr, overflow ? maxValue : count],
+        remark: overflow && remark ? `${remark}(${count})` : remark
+      })
     }
 
     return results
+  }
+
+  function formatDateLocal(date) {
+    const y = date.getFullYear()
+    const m = String(date.getMonth() + 1).padStart(2, '0')
+    const d = String(date.getDate()).padStart(2, '0')
+    return `${y}-${m}-${d}`
   }
 
   // ==== 生命周期 ====

@@ -79,7 +79,13 @@
                 </div>
               </template>
             </el-table-column>
-            <el-table-column align="left" label="链接" prop="url" min-width="300"/>
+            <el-table-column align="left" label="链接" prop="url" min-width="300">
+              <template #default="{ row }">
+                <div class="cursor-pointer" @click="handleCopy(row.url)">
+                  {{ row.url }}
+                </div>
+              </template>
+            </el-table-column>
             <el-table-column align="left" label="标签" prop="tag" width="100">
               <template #default="scope">
                 <el-tag
@@ -294,6 +300,23 @@ const editFileNameFunc = async (row) => {
         })
       })
 }
+
+const handleCopy = (content) => {
+  if (!navigator.clipboard) {
+    ElMessage.warning("当前环境不支持复制功能，请手动选中复制");
+    return;
+  }
+
+  // localhost 或 https 环境下生效
+  navigator.clipboard
+    .writeText(content)
+    .then(() => {
+      ElMessage.success("复制成功");
+    })
+    .catch(() => {
+      ElMessage.error("复制失败");
+    });
+};
 
 /**
  * 导入URL
