@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>今日任务</title>
+    <!-- 引入Tailwind CSS（样式框架） -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入Font Awesome图标 -->
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.css">
+    <!-- 自定义Tailwind配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4F46E5', // 主色调-靛蓝
+                        success: '#10B981', // 成功色-绿色
+                        neutral: '#64748B', // 中性色
+                        warning: '#F59E0B', // 警告色
+                        danger: '#EF4444', // 危险色
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'card': '0 4px 20px rgba(0, 0, 0, 0.08)', // 更细腻的卡片阴影
+                        'input-focus': '0 0 0 2px rgba(79, 70, 229, 0.25)', // 输入框聚焦阴影
+                    }
+                },
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+
+            .bg-gradient-primary {
+                background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+            }
+
+            .animate-float {
+                animation: float 3s ease-in-out infinite;
+            }
+
+            .animate-scale-in {
+                animation: scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            }
+
+            .animate-pulse-light {
+                animation: pulseLight 2s infinite;
+            }
+
+            @keyframes float {
+                0%, 100% {
+                    transform: translateY(0px);
+                }
+                50% {
+                    transform: translateY(-10px);
+                }
+            }
+
+            @keyframes scaleIn {
+                0% {
+                    transform: scale(0.95);
+                    opacity: 0;
+                }
+                100% {
+                    transform: scale(1);
+                    opacity: 1;
+                }
+            }
+
+            @keyframes pulseLight {
+                0%, 100% {
+                    opacity: 1;
+                }
+                50% {
+                    opacity: 0.7;
+                }
+            }
+
+            /* Toast样式增强 */
+            .toast-base {
+                @apply fixed top-8 left-1/2 -translate-x-1/2 px-6 py-3 rounded-lg text-white text-sm z-50 transition-all duration-300 pointer-events-none flex items-center gap-2;
+            }
+
+            .toast-success {
+                @apply bg-success/95 backdrop-blur-sm;
+            }
+
+            .toast-error {
+                @apply bg-danger/95 backdrop-blur-sm;
+            }
+
+            .toast-info {
+                @apply bg-primary/95 backdrop-blur-sm;
+            }
+
+            .toast-warning {
+                @apply bg-warning/95 backdrop-blur-sm;
+            }
+
+            /* 输入框样式统一 */
+            .form-input {
+                @apply w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans text-gray-800">
+<!-- 加载遮罩 -->
+<div id="loading" class="fixed inset-0 bg-white/95 flex items-center justify-center z-50 hidden">
+    <div class="relative">
+        <div class="animate-spin rounded-full h-14 w-14 border-t-3 border-primary"></div>
+        <div class="absolute inset-0 flex items-center justify-center text-primary text-xs">加载中</div>
+    </div>
+</div>
+
+<!-- 增强版Toast提示框 -->
+<div id="toast" class="toast-base opacity-0 -translate-y-8">
+    <i id="toastIcon" class="fas"></i>
+    <span id="toastText"></span>
+</div>
+
+<!-- 登录容器 -->
+<div id="loginContainer" class="min-h-screen flex items-center justify-center p-4 bg-gray-50">
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-card p-8 animate-scale-in">
+        <div class="text-center mb-8">
+            <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-clipboard-check text-2xl text-primary"></i>
+            </div>
+            <h2 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-gray-800">今日任务打卡</h2>
+            <p class="text-neutral mt-2">请登录后完成今日任务</p>
+        </div>
+
+        <!-- 验证码图片 -->
+        <div class="mb-6 flex justify-center">
+            <div class="relative">
+                <img id="captchaImg"
+                     class="h-20 rounded border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
+                     onclick="getCaptcha()"
+                     alt="点击刷新验证码"
+                     src="#">
+                <span class="absolute bottom-1 right-1 text-xs text-neutral bg-white/80 px-1 rounded">点击刷新</span>
+            </div>
+        </div>
+
+        <!-- 登录表单 -->
+        <form id="loginForm" class="space-y-5">
+            <div>
+                <label for="username" class="block text-sm font-medium text-gray-700 mb-1.5">用户名</label>
+                <input type="text" id="username"
+                       class="form-input"
+                       placeholder="请输入用户名"
+                       required>
+            </div>
+            <div>
+                <label for="password" class="block text-sm font-medium text-gray-700 mb-1.5">密码</label>
+                <div class="relative">
+                    <input type="password" id="password"
+                           class="form-input pr-10"
+                           placeholder="请输入密码"
+                           required>
+                    <button type="button" id="togglePwd"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral hover:text-primary transition-colors">
+                        <i class="fas fa-eye-slash"></i>
+                    </button>
+                </div>
+            </div>
+            <div>
+                <label for="captcha" class="block text-sm font-medium text-gray-700 mb-1.5">验证码</label>
+                <input type="text" id="captcha" maxlength="6"
+                       class="form-input"
+                       placeholder="请输入验证码"
+                       required>
+            </div>
+            <button type="submit" id="loginBtn"
+                    class="w-full bg-gradient-primary text-white py-3 rounded-lg font-medium hover:opacity-95 transition-all active:scale-98">
+                登录
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- 任务容器 -->
+<div id="taskContainer" class="min-h-screen p-4 pb-20 hidden bg-gray-50">
+    <!-- 头部 -->
+    <div class="max-w-md mx-auto mb-8">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">今日任务</h1>
+                <p class="text-neutral text-sm mt-1" id="userInfo"></p>
+            </div>
+            <button onclick="confirmLogout()"
+                    class="p-2 text-neutral hover:text-danger hover:bg-danger/5 rounded-full transition-colors">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- 未完成任务-采集表单 -->
+    <div id="taskForm" class="max-w-md mx-auto space-y-4 hidden">
+        <div class="bg-white rounded-2xl shadow-card p-6 animate-scale-in">
+            <h3 class="font-semibold text-gray-800 mb-6 flex items-center">
+                <i class="fas fa-tasks text-primary mr-2"></i>待完成任务
+            </h3>
+            <div id="taskList" class="space-y-6"></div>
+            <button id="submitBtn"
+                    class="w-full mt-6 bg-primary text-white py-3 rounded-lg font-medium hover:bg-primary/90 transition-all active:scale-98">
+                提交完成情况
+            </button>
+        </div>
+    </div>
+
+    <!-- 全部完成-优美展示页 -->
+    <div id="taskComplete" class="max-w-md mx-auto text-center hidden animate-scale-in">
+        <div class="bg-white rounded-2xl shadow-card p-10">
+            <div class="text-success text-6xl mb-6 animate-float">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-3">今日任务全部完成！</h2>
+            <p class="text-neutral mb-8 leading-relaxed">太棒了！坚持就是胜利 ✨<br>继续保持优秀的状态</p>
+            <button onclick="getTaskList()"
+                    class="bg-success text-white px-8 py-3 rounded-lg font-medium hover:bg-success/90 transition-all active:scale-98">
+                刷新状态
+            </button>
+        </div>
+    </div>
+
+    <!-- 空任务状态 -->
+    <div id="taskEmpty" class="max-w-md mx-auto text-center hidden animate-scale-in">
+        <div class="bg-white rounded-2xl shadow-card p-10">
+            <div class="text-neutral text-5xl mb-6">
+                <i class="fas fa-inbox"></i>
+            </div>
+            <h2 class="text-xl font-bold text-gray-800 mb-3">暂无待完成任务</h2>
+            <p class="text-neutral mb-8">今日暂无需要完成的任务，好好休息吧 😊</p>
+            <button onclick="getTaskList()"
+                    class="bg-neutral text-white px-8 py-3 rounded-lg font-medium hover:bg-neutral/90 transition-all active:scale-98">
+                刷新任务
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ===================== 常量配置 =====================
+    const API_BASE = "";
+
+    const API = {
+        captcha: API_BASE + '/base/captcha',
+        login: API_BASE + '/base/login',
+        taskList: API_BASE + '/dailyTask/listActiveTaskList',
+        taskSubmit: API_BASE + '/dailyTaskCompletion/createDailyTaskCompletion'
+    };
+
+    // 全局状态管理
+    const appState = {
+        currentCaptchaId: '',
+        isSubmitting: false, // 防止重复提交
+        toastTimer: null
+    };
+
+    // ===================== 工具函数 =====================
+    /**
+     * 显示/隐藏加载遮罩
+     * @param {boolean} show - 是否显示
+     */
+    const setLoading = (show) => {
+        document.getElementById('loading').classList.toggle('hidden', !show);
+    };
+
+    /**
+     * 增强版Toast提示
+     * @param {string} message - 提示文本
+     * @param {string} type - 类型：success/error/info/warning
+     */
+    const showToast = (message, type = 'info') => {
+        const toast = document.getElementById('toast');
+        const toastIcon = document.getElementById('toastIcon');
+        const toastText = document.getElementById('toastText');
+
+        // 清除上一个定时器
+        if (appState.toastTimer) clearTimeout(appState.toastTimer);
+
+        // 重置样式
+        toast.className = 'toast-base';
+        toast.classList.add(`toast-${type}`);
+
+        // 设置图标和文本
+        const iconMap = {
+            success: 'fa-check-circle',
+            error: 'fa-exclamation-circle',
+            info: 'fa-info-circle',
+            warning: 'fa-exclamation-triangle'
+        };
+        toastIcon.className = `fas ${iconMap[type]}`;
+        toastText.textContent = message;
+
+        // 显示提示
+        toast.classList.remove('opacity-0', '-translate-y-8');
+        toast.classList.add('opacity-100', 'translate-y-0');
+
+        // 3秒后自动隐藏
+        appState.toastTimer = setTimeout(() => {
+            toast.classList.add('opacity-0', '-translate-y-8');
+            toast.classList.remove('opacity-100', 'translate-y-0');
+        }, 3500);
+    };
+
+    // 快捷提示函数
+    const showSuccess = (msg) => showToast(msg, 'success');
+    const showError = (msg) => showToast(msg, 'error');
+    const showInfo = (msg) => showToast(msg, 'info');
+    const showWarning = (msg) => showToast(msg, 'warning');
+
+    /**
+     * 统一请求封装（自动携带Token、防重复提交）
+     * @param {string} url - 请求地址
+     * @param {object} options - 请求配置
+     * @returns {Promise<any>} 请求结果
+     */
+    const request = async (url, options = {}) => {
+        // 防止重复请求
+        if (appState.isSubmitting) return;
+        appState.isSubmitting = true;
+
+        setLoading(true);
+        try {
+            const token = localStorage.getItem('task_token');
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+
+            // 自动携带token
+            if (token) headers['x-token'] = token;
+
+            const response = await fetch(url, {
+                method: options.method || 'GET',
+                headers,
+                body: options.body ? JSON.stringify(options.body) : null
+            });
+
+            const res = await response.json();
+
+            if (res.code !== 0) throw new Error(res.msg || '请求失败');
+            return res.data;
+        } catch (error) {
+            showError(error.message || '网络异常，请稍后重试');
+            throw error;
+        } finally {
+            setLoading(false);
+            appState.isSubmitting = false;
+        }
+    };
+
+    // ===================== 登录相关功能 =====================
+    /**
+     * 获取验证码图片
+     */
+    const getCaptcha = async () => {
+        try {
+            const captchaImg = document.getElementById('captchaImg');
+            // 加载中状态
+            captchaImg.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjgwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAgODAiPgogIDxnIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+CiAgICA8Y2lyY2xlIGN4PSI2MCIgY3k9IjQwIiByPSIzNSIgZmlsbD0iIzE5NzYxMCIgZmlsbC1vcGFjaXR5PSIwLjEiLz4KICAgIDxwYXRoIGQ9Ik02MCAyMFY2MCIgc3Ryb2tlPSIjMTk3NjEwIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDwvZz4KPC9zdmc+';
+            captchaImg.classList.add('animate-pulse-light');
+
+            const data = await request(API.captcha, {method: "POST"});
+            appState.currentCaptchaId = data.captchaId;
+            captchaImg.src = data.picPath;
+            captchaImg.classList.remove('animate-pulse-light');
+        } catch (error) {
+            // 验证码加载失败自动重试
+            setTimeout(getCaptcha, 1000);
+        }
+    };
+
+    /**
+     * 切换密码显示/隐藏
+     */
+    const togglePassword = () => {
+        const pwdInput = document.getElementById('password');
+        const toggleBtn = document.getElementById('togglePwd');
+        const isPassword = pwdInput.type === 'password';
+
+        pwdInput.type = isPassword ? 'text' : 'password';
+        toggleBtn.innerHTML = isPassword ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+    };
+
+    /**
+     * 登录验证与提交
+     */
+    const login = async (e) => {
+        e.preventDefault();
+
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+        const captcha = document.getElementById('captcha').value.trim();
+        const loginBtn = document.getElementById('loginBtn');
+
+        // 表单验证
+        if (!username) return showWarning('请输入用户名');
+        if (!password) return showWarning('请输入密码');
+        if (!captcha) return showWarning('请输入验证码');
+
+        // 禁用登录按钮防止重复提交
+        loginBtn.disabled = true;
+        loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>登录中...';
+
+        try {
+            const params = {
+                username,
+                password,
+                captcha,
+                captchaId: appState.currentCaptchaId,
+                openCaptcha: true
+            };
+
+            const data = await request(API.login, {
+                method: 'POST',
+                body: params
+            });
+
+            // 存储用户信息
+            localStorage.setItem('task_token', data.token);
+            localStorage.setItem('user_info', JSON.stringify(data.user));
+
+            showSuccess('登录成功！');
+            checkLoginStatus();
+        } catch (error) {
+            // 登录失败刷新验证码
+            getCaptcha();
+            document.getElementById('captcha').value = '';
+        } finally {
+            // 恢复登录按钮
+            loginBtn.disabled = false;
+            loginBtn.innerHTML = '登录';
+        }
+    };
+
+    /**
+     * 确认退出登录
+     */
+    const confirmLogout = () => {
+        logout();
+    };
+
+    /**
+     * 退出登录
+     */
+    const logout = () => {
+        localStorage.clear();
+        showInfo('已退出登录');
+        checkLoginStatus();
+    };
+
+    // ===================== 任务相关功能 =====================
+    /**
+     * 获取任务列表并渲染
+     */
+    const getTaskList = async () => {
+        try {
+            const data = await request(API.taskList);
+            renderTaskPage(data);
+        } catch (error) {
+            console.error('获取任务列表失败：', error);
+        }
+    };
+
+    /**
+     * 提交任务完成情况
+     */
+    const submitTask = async () => {
+        const taskListEl = document.getElementById('taskList');
+        const tasks = JSON.parse(taskListEl.dataset.tasks || '[]');
+        const unCompletedTasks = tasks.filter(item => !item.completed);
+        const submitBtn = document.getElementById('submitBtn');
+
+        if (unCompletedTasks.length === 0) {
+            return showInfo('暂无需要提交的任务');
+        }
+
+        // 禁用提交按钮
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>提交中...';
+
+        try {
+            // 构造提交参数并校验
+            const params = [];
+            let hasError = false;
+
+            for (const item of unCompletedTasks) {
+                const countInput = document.getElementById(`count_${item.id}`);
+                const remarkInput = document.getElementById(`remark_${item.id}`);
+
+                const countValue = parseInt(countInput.value.trim());
+                const remark = remarkInput.value.trim() || '已完成';
+
+                // 校验计数值
+                if (isNaN(countValue) || countValue < item.minValue || countValue > item.maxValue) {
+                    showError(`${item.name}：请输入${item.minValue}~${item.maxValue}之间的整数`);
+                    countInput.focus();
+                    countInput.classList.add('border-danger');
+                    // 输入框错误提示动画
+                    setTimeout(() => countInput.classList.remove('border-danger'), 2000);
+                    hasError = true;
+                    break;
+                }
+
+                params.push({
+                    taskId: item.id,
+                    finishDate: new Date().toISOString(),
+                    countValue: countValue,
+                    remark: remark,
+                    name: item.name,
+                    minValue: item.minValue,
+                    maxValue: item.maxValue
+                });
+            }
+
+            if (hasError) return;
+
+            // 提交任务
+            await request(API.taskSubmit, {
+                method: 'POST',
+                body: params
+            });
+
+            showSuccess('任务提交成功！');
+            await getTaskList();
+        } catch (error) {
+            console.error('提交任务失败：', error);
+        } finally {
+            // 恢复提交按钮
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '提交完成情况';
+        }
+    };
+
+    /**
+     * 渲染任务页面
+     * @param {Array} taskList - 任务列表数据
+     */
+    const renderTaskPage = (taskList) => {
+        // 隐藏所有任务容器
+        document.getElementById('taskForm').classList.add('hidden');
+        document.getElementById('taskComplete').classList.add('hidden');
+        document.getElementById('taskEmpty').classList.add('hidden');
+
+        // 渲染用户信息
+        const user = JSON.parse(localStorage.getItem('user_info') || '{}');
+        document.getElementById('userInfo').textContent = `欢迎你，${user.nickName || '用户'}`;
+
+        // 空任务处理
+        if (taskList.length === 0) {
+            document.getElementById('taskEmpty').classList.remove('hidden');
+            return;
+        }
+
+        // 判断是否全部完成
+        const allComplete = taskList.every(item => item.completed);
+
+        if (allComplete) {
+            // 全部完成
+            document.getElementById('taskComplete').classList.remove('hidden');
+        } else {
+            // 未完成任务，渲染表单
+            document.getElementById('taskForm').classList.remove('hidden');
+            const taskDom = document.getElementById('taskList');
+            taskDom.dataset.tasks = JSON.stringify(taskList);
+
+            // 渲染未完成任务
+            taskDom.innerHTML = taskList.filter(item => !item.completed).map(item => `
+                <div class="border-b border-gray-100 pb-5 last:border-0">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h4 class="font-medium text-gray-800">${item.name}</h4>
+                            <p class="text-xs text-neutral mt-1.5">${item.description || '无任务描述'}</p>
+                        </div>
+                        <span class="bg-primary/10 text-primary text-xs px-2.5 py-1 rounded-full">
+                            目标：${item.minValue}~${item.maxValue}
+                        </span>
+                    </div>
+                    <!-- 任务计数值 -->
+                    <div class="mb-3">
+                        <label class="block text-xs text-neutral mb-1.5">完成数量</label>
+                        <input type="number" id="count_${item.id}"
+                               min="${item.minValue}" max="${item.maxValue}" step="1"
+                               placeholder="请输入完成数量"
+                               value="${item.minValue}"
+                               class="form-input"
+                               oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                    </div>
+                    <!-- 完成说明 -->
+                    <div>
+                        <label class="block text-xs text-neutral mb-1.5">完成说明</label>
+                        <textarea id="remark_${item.id}"
+                               rows="2"
+                               placeholder="请简要描述完成情况"
+                               class="form-input resize-none"></textarea>
+                    </div>
+                </div>
+            `).join('');
+        }
+    };
+
+    // ===================== 初始化与事件绑定 =====================
+    /**
+     * 检查登录状态，切换页面
+     */
+    const checkLoginStatus = () => {
+        setLoading(true)
+        const token = localStorage.getItem('task_token');
+        const loginContainer = document.getElementById('loginContainer');
+        const taskContainer = document.getElementById('taskContainer');
+
+        if (token) {
+            // 已登录：显示任务页
+            loginContainer.classList.add('hidden');
+            taskContainer.classList.remove('hidden');
+            getTaskList();
+        } else {
+            // 未登录：显示登录页
+            loginContainer.classList.remove('hidden');
+            taskContainer.classList.add('hidden');
+            getCaptcha();
+        }
+        setLoading(false)
+    };
+
+    /**
+     * 页面初始化
+     */
+    const init = () => {
+        // 绑定登录表单提交事件
+        document.getElementById('loginForm').addEventListener('submit', login);
+
+        // 绑定密码显隐事件
+        document.getElementById('togglePwd').addEventListener('click', togglePassword);
+
+        // 绑定任务提交事件
+        document.getElementById('submitBtn').addEventListener('click', submitTask);
+
+        // 页面加载完成后检查登录状态
+        window.addEventListener('load', checkLoginStatus);
+    };
+
+    // 启动应用
+    init();
+</script>
+</body>
+</html>

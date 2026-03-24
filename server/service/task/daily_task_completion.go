@@ -1,6 +1,8 @@
 package task
 
 import (
+	"time"
+
 	"github.com/springbear2020/self-hub/server/constants"
 	"github.com/springbear2020/self-hub/server/global"
 	"github.com/springbear2020/self-hub/server/model/task"
@@ -104,5 +106,13 @@ func (taskCompletionService *DailyTaskCompletionService) GetDailyTaskStatInfoLis
 		})
 	}
 
+	return
+}
+
+func (taskCompletionService *DailyTaskCompletionService) ListTodayCompletedTasks(uid uint, taskIds []int) (list []task.DailyTaskCompletion, err error) {
+	today := time.Now().Format("2006-01-02")
+	err = global.GVA_DB.Model(&task.DailyTaskCompletion{}).
+		Where("user_id = ? AND task_id IN ? AND finish_date = ?", uid, taskIds, today).
+		Find(&list).Error
 	return
 }

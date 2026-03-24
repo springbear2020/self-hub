@@ -10,6 +10,8 @@ import (
 
 type DailyTaskService struct{}
 
+var dailyTaskCompletionService = new(DailyTaskCompletionService)
+
 func (dailyTaskService *DailyTaskService) CreateDailyTask(uid uint, dailyTask *task.DailyTask) (err error) {
 	dailyTask.UserId = uid
 	err = global.GVA_DB.Create(dailyTask).Error
@@ -73,5 +75,28 @@ func (dailyTaskService *DailyTaskService) GetDailyTaskInfoList(uid uint, info re
 
 func (dailyTaskService *DailyTaskService) ListActiveTaskList(uid uint) (list []task.DailyTask, err error) {
 	err = global.GVA_DB.Where("user_id = ? AND is_active = ?", uid, constants.AssertionYes).Order("sort desc").Find(&list).Error
+	if err != nil {
+		return
+	}
+
+	// 查询每个任务今日完成情况
+	taskIds := make([]int, len(list))
+	for i, item := range list {
+		taskIds[i] = *item.Id
+	}
+	completedTasks, err := dailyTaskCompletionService.ListTodayCompletedTasks(uid, taskIds)
+	if err != nil {
+		return nil, err
+	}
+
+	// 设置已完成任务状态
+	for _, ct := range completedTasks {
+		for i, item := range list {
+			if *item.Id == *ct.TaskId {
+				list[i].Completed = true
+			}
+		}
+	}
+
 	return
 }

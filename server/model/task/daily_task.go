@@ -15,6 +15,8 @@ type DailyTask struct {
 	MaxValue    *int       `json:"maxValue" form:"maxValue" gorm:"comment:计数值最大值;column:max_value;size:10;" binding:"required"`
 	CreatedAt   *time.Time `json:"createdAt" form:"createdAt" gorm:"comment:创建时间;column:created_at;"`
 	UpdatedAt   *time.Time `json:"updatedAt" form:"updatedAt" gorm:"comment:更新时间;column:updated_at;"`
+
+	Completed bool `json:"completed" gorm:"-"`
 }
 
 func (DailyTask) TableName() string {
