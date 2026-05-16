@@ -107,6 +107,40 @@
             .form-input {
                 @apply w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200;
             }
+
+            /* 任务卡片长按/右键视觉效果 */
+            .task-card-press {
+                @apply bg-gray-50 scale-[0.98] shadow-md rounded-lg transition-all duration-200;
+            }
+
+            /* 文本行数限制 */
+            .line-clamp-2 {
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+
+            .line-clamp-3 {
+                display: -webkit-box;
+                -webkit-line-clamp: 3;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+
+            .whitespace-nowrap {
+                white-space: nowrap;
+            }
+
+            @media (max-width: 360px) {
+                .pr-24 {
+                    padding-right: 20px !important;
+                }
+
+                .line-clamp-3 {
+                    -webkit-line-clamp: 2;
+                }
+            }
         }
     </style>
 </head>
@@ -358,6 +392,107 @@
         }
     };
 
+    // ===================== 无需完成任务管理 =====================
+    // 长按定时器（防误触）
+    let longPressTimer = null;
+    let currentPressCard = null;
+
+    /**
+     * 获取今日日期（YYYY-MM-DD）
+     */
+    const getTodayDate = () => {
+        const now = new Date();
+        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    };
+
+    /**
+     * 清理过期的无需完成任务缓存（只保留今日）
+     */
+    const cleanExpiredIgnoreTasks = () => {
+        const ignoreTasksStr = localStorage.getItem('ignore_tasks');
+        if (!ignoreTasksStr) return;
+
+        const ignoreTasks = JSON.parse(ignoreTasksStr);
+        const today = getTodayDate();
+        const newIgnoreTasks = {};
+        if (ignoreTasks[today]) newIgnoreTasks[today] = ignoreTasks[today];
+        localStorage.setItem('ignore_tasks', JSON.stringify(newIgnoreTasks));
+    };
+
+    /**
+     * 标记/取消标记任务为今日无需完成
+     * @param {number|string} taskId - 任务ID
+     */
+    const toggleIgnoreTask = (taskId) => {
+        const today = getTodayDate();
+        const ignoreTasksStr = localStorage.getItem('ignore_tasks') || '{}';
+        const ignoreTasks = JSON.parse(ignoreTasksStr);
+
+        if (!ignoreTasks[today]) ignoreTasks[today] = [];
+
+        const taskIdStr = String(taskId);
+        const index = ignoreTasks[today].indexOf(taskIdStr);
+
+        if (index > -1) {
+            ignoreTasks[today].splice(index, 1);
+            showSuccess('已取消标记：该任务今日需完成');
+        } else {
+            ignoreTasks[today].push(taskIdStr);
+            showSuccess('已标记：该任务今日无需完成');
+        }
+
+        cleanExpiredIgnoreTasks();
+        localStorage.setItem('ignore_tasks', JSON.stringify(ignoreTasks));
+        getTaskList();
+    };
+
+    /**
+     * 获取今日无需完成的任务ID列表
+     */
+    const getTodayIgnoreTaskIds = () => {
+        cleanExpiredIgnoreTasks();
+        const today = getTodayDate();
+        const ignoreTasksStr = localStorage.getItem('ignore_tasks') || '{}';
+        const ignoreTasks = JSON.parse(ignoreTasksStr);
+        return ignoreTasks[today] || [];
+    };
+
+    /**
+     * 开始长按（视觉效果）
+     */
+    const startLongPress = (e, taskId) => {
+        currentPressCard = e.currentTarget;
+        // 添加视觉高亮样式
+        currentPressCard.classList.add('task-card-press');
+        // 800ms 后触发确认（真正的长按）
+        longPressTimer = setTimeout(() => {
+            if (confirm('⚠️ 确认标记该任务【今日无需完成】吗？')) {
+                toggleIgnoreTask(taskId);
+            }
+            // 取消视觉效果
+            currentPressCard.classList.remove('task-card-press');
+        }, 800);
+    };
+
+    /**
+     * 结束长按（清除定时器+恢复样式）
+     */
+    const endLongPress = () => {
+        clearTimeout(longPressTimer);
+        if (currentPressCard) {
+            currentPressCard.classList.remove('task-card-press');
+            currentPressCard = null;
+        }
+    };
+
+    /**
+     * PC端右键触发
+     */
+    const handleRightClick = (e, taskId) => {
+        e.preventDefault();
+        startLongPress(e, taskId);
+    };
+
     // ===================== 登录相关功能 =====================
     /**
      * 获取验证码图片
@@ -463,6 +598,9 @@
      * 获取任务列表并渲染
      */
     const getTaskList = async () => {
+        // 获取任务前清理过期缓存
+        cleanExpiredIgnoreTasks();
+
         try {
             const data = await request(API.taskList);
             renderTaskPage(data);
@@ -546,6 +684,10 @@
      * @param {Array} taskList - 任务列表数据
      */
     const renderTaskPage = (taskList) => {
+        // 过滤今日标记为「无需完成」的任务
+        const ignoreTaskIds = getTodayIgnoreTaskIds();
+        taskList = taskList.filter(item => !ignoreTaskIds.includes(String(item.id)));
+
         // 隐藏所有任务容器
         document.getElementById('taskForm').classList.add('hidden');
         document.getElementById('taskComplete').classList.add('hidden');
@@ -575,13 +717,19 @@
 
             // 渲染未完成任务
             taskDom.innerHTML = taskList.filter(item => !item.completed).map(item => `
-                <div class="border-b border-gray-100 pb-5 last:border-0">
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <h4 class="font-medium text-gray-800">${item.name}</h4>
-                            <p class="text-xs text-neutral mt-1.5">${item.description || '无任务描述'}</p>
+                <div class="border-b border-gray-100 pb-5 last:border-0 transition-all duration-200"
+                     ontouchstart="startLongPress(event, ${item.id})"
+                     ontouchend="endLongPress()"
+                     ontouchcancel="endLongPress()"
+                     oncontextmenu="handleRightClick(event, ${item.id})"
+                     style="-webkit-touch-callout: none; user-select: none;">
+                    <div class="relative mb-4">
+                        <div class="pr-24">
+                            <h4 class="font-medium text-gray-800 line-clamp-2">${item.name}</h4>
+                            <p class="text-xs text-neutral mt-1.5 line-clamp-3">${item.description || '无任务描述'}</p>
                         </div>
-                        <span class="bg-primary/10 text-primary text-xs px-2.5 py-1 rounded-full">
+                        <!-- 目标徽章固定在右上角 -->
+                        <span class="absolute top-0 right-0 bg-primary/10 text-primary text-xs px-2.5 py-1 rounded-full whitespace-nowrap">
                             目标：${item.minValue}~${item.maxValue}
                         </span>
                     </div>
@@ -636,6 +784,9 @@
      * 页面初始化
      */
     const init = () => {
+        // 初始化时清理过期缓存
+        cleanExpiredIgnoreTasks();
+
         // 绑定登录表单提交事件
         document.getElementById('loginForm').addEventListener('submit', login);
 
