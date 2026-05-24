@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/springbear2020/self-hub/server/service/example"
+	"github.com/springbear2020/self-hub/server/service/mine"
 	"github.com/springbear2020/self-hub/server/service/miser"
 	"github.com/springbear2020/self-hub/server/service/system"
 	"github.com/springbear2020/self-hub/server/service/task"
@@ -14,4 +15,5 @@ type ServiceGroup struct {
 	ExampleServiceGroup example.ServiceGroup
 	TaskServiceGroup    task.ServiceGroup
 	MiserServiceGroup   miser.ServiceGroup
+	MineServiceGroup    mine.ServiceGroup
 }

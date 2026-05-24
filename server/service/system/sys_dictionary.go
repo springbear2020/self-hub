@@ -110,3 +110,27 @@ func (dictionaryService *DictionaryService) GetSysDictionaryInfoList() (list int
 	err = global.GVA_DB.Find(&sysDictionarys).Error
 	return sysDictionarys, err
 }
+
+func (dictionaryService *DictionaryService) ListAvailable(dictName string) ([]system.SysDictionaryDetail, error) {
+	if dictName == "" {
+		return nil, errors.New("字典名参数不能为空")
+	}
+
+	var exists bool
+	for _, name := range global.GVA_CONFIG.System.OpenDictList {
+		if name == dictName {
+			exists = true
+			break
+		}
+	}
+	if !exists {
+		return nil, errors.New("字典禁止被访问")
+	}
+
+	dictionary, err := dictionaryService.GetSysDictionary(dictName, 0, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return dictionary.SysDictionaryDetails, nil
+}

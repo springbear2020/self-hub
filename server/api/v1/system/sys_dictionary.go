@@ -127,3 +127,39 @@ func (s *DictionaryApi) GetSysDictionaryList(c *gin.Context) {
 	}
 	response.OkWithDetailed(list, "获取成功", c)
 }
+
+func (s *DictionaryApi) ListArray(c *gin.Context) {
+	dictList, err := dictionaryService.ListAvailable(c.Query("dictName"))
+	if err != nil {
+		global.GVA_LOG.Error(err.Error())
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+
+	dictArray := make([]map[string]interface{}, len(dictList))
+	for i := range dictList {
+		dictArray[i] = map[string]interface{}{
+			"id":    dictList[i].ID,
+			"label": dictList[i].Label,
+			"value": dictList[i].Value,
+		}
+	}
+
+	response.OkWithData(dictArray, c)
+}
+
+func (s *DictionaryApi) GetMap(c *gin.Context) {
+	dictList, err := dictionaryService.ListAvailable(c.Query("dictName"))
+	if err != nil {
+		global.GVA_LOG.Error(err.Error())
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+
+	dictMap := make(map[string]string)
+	for i := range dictList {
+		dictMap[dictList[i].Value] = dictList[i].Label
+	}
+
+	response.OkWithData(dictMap, c)
+}

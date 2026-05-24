@@ -31,4 +31,15 @@ func initBizRouter(routers ...*gin.RouterGroup) {
 		miserRouter.InitMiserLoanRecordRouter(privateGroup, publicGroup)
 		miserRouter.InitMiserRankingRecordRouter(privateGroup, publicGroup)
 	}
+	{
+		mineRouter := router.RouterGroupApp.Mine
+		mineRouter.InitMineBooksRouter(privateGroup, publicGroup)
+		mineRouter.InitMineBlogsRouter(privateGroup, publicGroup)
+		mineRouter.InitMineProjectsRouter(privateGroup, publicGroup)
+		mineRouter.InitMineWebsitesRouter(privateGroup, publicGroup)
+	}
+	{
+		openingRouter := router.RouterGroupApp.Opening
+		openingRouter.InitOpeningRouter(privateGroup, publicGroup)
+	}
 }

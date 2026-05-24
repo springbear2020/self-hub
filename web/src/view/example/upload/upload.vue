@@ -82,7 +82,7 @@
             <el-table-column align="left" label="链接" prop="url" min-width="300">
               <template #default="{ row }">
                 <div class="cursor-pointer" @click="handleCopy(row.url)">
-                  {{ row.url }}
+                  <el-text truncated>{{ row.url }}</el-text>
                 </div>
               </template>
             </el-table-column>

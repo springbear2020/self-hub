@@ -45,7 +45,7 @@ func (*Qiniu) UploadFile(file *multipart.FileHeader) (string, string, error) {
 
 	now := time.Now()
 	year := now.Format("2006")
-	date := now.Format("0601")
+	date := now.Format("01")
 	md5, err := utils.CalculateMultipartFileMD5(f)
 	if err != nil {
 		return "", "", err
