@@ -7,6 +7,7 @@ import (
 	"github.com/springbear2020/self-hub/server/model/example"
 	"github.com/springbear2020/self-hub/server/model/example/request"
 	exampleRes "github.com/springbear2020/self-hub/server/model/example/response"
+	"github.com/springbear2020/self-hub/server/utils"
 	"go.uber.org/zap"
 	"strconv"
 )
@@ -32,7 +33,8 @@ func (b *FileUploadAndDownloadApi) UploadFile(c *gin.Context) {
 		response.FailWithMessage("接收文件失败", c)
 		return
 	}
-	file, err = fileUploadAndDownloadService.UploadFile(header, noSave, classId) // 文件上传后拿到文件路径
+	uid := utils.GetUserID(c)
+	file, err = fileUploadAndDownloadService.UploadFile(uid, header, noSave, classId) // 文件上传后拿到文件路径
 	if err != nil {
 		global.GVA_LOG.Error("上传文件失败!", zap.Error(err))
 		response.FailWithMessage("上传文件失败", c)
@@ -49,7 +51,8 @@ func (b *FileUploadAndDownloadApi) EditFileName(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	err = fileUploadAndDownloadService.EditFileName(file)
+	uid := utils.GetUserID(c)
+	err = fileUploadAndDownloadService.EditFileName(uid, file)
 	if err != nil {
 		global.GVA_LOG.Error("编辑失败!", zap.Error(err))
 		response.FailWithMessage("编辑失败", c)
@@ -73,7 +76,8 @@ func (b *FileUploadAndDownloadApi) DeleteFile(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	if err := fileUploadAndDownloadService.DeleteFile(file); err != nil {
+	uid := utils.GetUserID(c)
+	if err := fileUploadAndDownloadService.DeleteFile(uid, file); err != nil {
 		global.GVA_LOG.Error("删除失败!", zap.Error(err))
 		response.FailWithMessage("删除失败", c)
 		return
@@ -97,7 +101,8 @@ func (b *FileUploadAndDownloadApi) GetFileList(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	list, total, err := fileUploadAndDownloadService.GetFileRecordInfoList(pageInfo)
+	uid := utils.GetUserID(c)
+	list, total, err := fileUploadAndDownloadService.GetFileRecordInfoList(uid, pageInfo)
 	if err != nil {
 		global.GVA_LOG.Error("获取失败!", zap.Error(err))
 		response.FailWithMessage("获取失败", c)
@@ -126,7 +131,8 @@ func (b *FileUploadAndDownloadApi) ImportURL(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	if err := fileUploadAndDownloadService.ImportURL(&file); err != nil {
+	uid := utils.GetUserID(c)
+	if err := fileUploadAndDownloadService.ImportURL(uid, &file); err != nil {
 		global.GVA_LOG.Error("导入URL失败!", zap.Error(err))
 		response.FailWithMessage("导入URL失败", c)
 		return

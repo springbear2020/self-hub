@@ -47,3 +47,10 @@ export const getMineBlogsList = (params) => {
     params
   })
 }
+
+export const getMineBlogsStat = () => {
+  return service({
+    url: '/mineBlogs/getMineBlogsStat',
+    method: 'get'
+  })
+}

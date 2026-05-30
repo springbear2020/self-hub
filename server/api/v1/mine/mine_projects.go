@@ -96,6 +96,7 @@ func (mineProjectsApi *MineProjectsApi) GetMineProjectsList(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
+	pageInfo.PageInfo.Check()
 
 	uid := utils.GetUserID(c)
 	list, total, err := mineProjectsService.GetMineProjectsInfoList(uid, pageInfo)

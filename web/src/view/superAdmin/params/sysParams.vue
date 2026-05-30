@@ -140,7 +140,7 @@
               >查看详情</el-button
             >
             <el-button
-              type="primary"
+              type="warning"
               link
               icon="edit"
               class="table-button"
@@ -148,7 +148,7 @@
               >变更</el-button
             >
             <el-button
-              type="primary"
+              type="danger"
               link
               icon="delete"
               @click="deleteRow(scope.row)"

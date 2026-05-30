@@ -48,7 +48,7 @@
         <el-table-column align="left" label="操作" :min-width="appStore.operateMinWith">
           <template #default="scope">
             <el-button
-              type="primary"
+              type="warning"
               link
               icon="edit"
               @click="updateSysDictionaryDetailFunc(scope.row)"
@@ -56,7 +56,7 @@
               变更
             </el-button>
             <el-button
-              type="primary"
+              type="danger"
               link
               icon="delete"
               @click="deleteSysDictionaryDetailFunc(scope.row)"

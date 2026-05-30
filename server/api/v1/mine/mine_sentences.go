@@ -10,18 +10,18 @@ import (
 	"go.uber.org/zap"
 )
 
-type MineBlogsApi struct{}
+type MineSentencesApi struct{}
 
-func (mineBlogsApi *MineBlogsApi) CreateMineBlogs(c *gin.Context) {
-	var mineBlogs mine.MineBlogs
-	err := c.ShouldBindJSON(&mineBlogs)
+func (mineSentencesApi *MineSentencesApi) CreateMineSentences(c *gin.Context) {
+	var mineSentences mine.MineSentences
+	err := c.ShouldBindJSON(&mineSentences)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
 
 	uid := utils.GetUserID(c)
-	err = mineBlogsService.CreateMineBlogs(uid, &mineBlogs)
+	err = mineSentencesService.CreateMineSentences(uid, &mineSentences)
 	if err != nil {
 		global.GVA_LOG.Error("创建失败!", zap.Error(err))
 		response.FailWithMessage("创建失败:"+err.Error(), c)
@@ -31,10 +31,10 @@ func (mineBlogsApi *MineBlogsApi) CreateMineBlogs(c *gin.Context) {
 	response.OkWithMessage("创建成功", c)
 }
 
-func (mineBlogsApi *MineBlogsApi) DeleteMineBlogs(c *gin.Context) {
+func (mineSentencesApi *MineSentencesApi) DeleteMineSentences(c *gin.Context) {
 	id := c.Query("id")
 	uid := utils.GetUserID(c)
-	err := mineBlogsService.DeleteMineBlogs(uid, id)
+	err := mineSentencesService.DeleteMineSentences(uid, id)
 	if err != nil {
 		global.GVA_LOG.Error("删除失败!", zap.Error(err))
 		response.FailWithMessage("删除失败:"+err.Error(), c)
@@ -44,10 +44,10 @@ func (mineBlogsApi *MineBlogsApi) DeleteMineBlogs(c *gin.Context) {
 	response.OkWithMessage("删除成功", c)
 }
 
-func (mineBlogsApi *MineBlogsApi) DeleteMineBlogsByIds(c *gin.Context) {
+func (mineSentencesApi *MineSentencesApi) DeleteMineSentencesByIds(c *gin.Context) {
 	ids := c.QueryArray("ids[]")
 	uid := utils.GetUserID(c)
-	err := mineBlogsService.DeleteMineBlogsByIds(uid, ids)
+	err := mineSentencesService.DeleteMineSentencesByIds(uid, ids)
 	if err != nil {
 		global.GVA_LOG.Error("批量删除失败!", zap.Error(err))
 		response.FailWithMessage("批量删除失败:"+err.Error(), c)
@@ -57,16 +57,16 @@ func (mineBlogsApi *MineBlogsApi) DeleteMineBlogsByIds(c *gin.Context) {
 	response.OkWithMessage("批量删除成功", c)
 }
 
-func (mineBlogsApi *MineBlogsApi) UpdateMineBlogs(c *gin.Context) {
-	var mineBlogs mine.MineBlogs
-	err := c.ShouldBindJSON(&mineBlogs)
+func (mineSentencesApi *MineSentencesApi) UpdateMineSentences(c *gin.Context) {
+	var mineSentences mine.MineSentences
+	err := c.ShouldBindJSON(&mineSentences)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
 
 	uid := utils.GetUserID(c)
-	err = mineBlogsService.UpdateMineBlogs(uid, mineBlogs)
+	err = mineSentencesService.UpdateMineSentences(uid, mineSentences)
 	if err != nil {
 		global.GVA_LOG.Error("更新失败!", zap.Error(err))
 		response.FailWithMessage("更新失败:"+err.Error(), c)
@@ -76,21 +76,21 @@ func (mineBlogsApi *MineBlogsApi) UpdateMineBlogs(c *gin.Context) {
 	response.OkWithMessage("更新成功", c)
 }
 
-func (mineBlogsApi *MineBlogsApi) FindMineBlogs(c *gin.Context) {
+func (mineSentencesApi *MineSentencesApi) FindMineSentences(c *gin.Context) {
 	id := c.Query("id")
 	uid := utils.GetUserID(c)
-	remineBlogs, err := mineBlogsService.GetMineBlogs(uid, id)
+	remineSentences, err := mineSentencesService.GetMineSentences(uid, id)
 	if err != nil {
 		global.GVA_LOG.Error("查询失败!", zap.Error(err))
 		response.FailWithMessage("查询失败:"+err.Error(), c)
 		return
 	}
 
-	response.OkWithData(remineBlogs, c)
+	response.OkWithData(remineSentences, c)
 }
 
-func (mineBlogsApi *MineBlogsApi) GetMineBlogsList(c *gin.Context) {
-	var pageInfo request.MineBlogsSearch
+func (mineSentencesApi *MineSentencesApi) GetMineSentencesList(c *gin.Context) {
+	var pageInfo request.MineSentencesSearch
 	err := c.ShouldBindQuery(&pageInfo)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
@@ -99,7 +99,7 @@ func (mineBlogsApi *MineBlogsApi) GetMineBlogsList(c *gin.Context) {
 	pageInfo.PageInfo.Check()
 
 	uid := utils.GetUserID(c)
-	list, total, err := mineBlogsService.GetMineBlogsInfoList(uid, pageInfo)
+	list, total, err := mineSentencesService.GetMineSentencesInfoList(uid, pageInfo)
 	if err != nil {
 		global.GVA_LOG.Error("获取失败!", zap.Error(err))
 		response.FailWithMessage("获取失败:"+err.Error(), c)
@@ -114,9 +114,9 @@ func (mineBlogsApi *MineBlogsApi) GetMineBlogsList(c *gin.Context) {
 	}, "获取成功", c)
 }
 
-func (mineBlogsApi *MineBlogsApi) GetMineBlogsStat(c *gin.Context) {
+func (mineSentencesApi *MineSentencesApi) GetMineSentencesStat(c *gin.Context) {
 	uid := utils.GetUserID(c)
-	list, err := mineBlogsService.GetMineBlogsStat(uid)
+	list, err := mineSentencesService.GetMineSentencesStat(uid)
 	if err != nil {
 		global.GVA_LOG.Error("查询失败!", zap.Error(err))
 		response.FailWithMessage("查询失败:"+err.Error(), c)

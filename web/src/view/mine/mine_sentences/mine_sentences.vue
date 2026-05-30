@@ -9,10 +9,6 @@
         class="demo-form-inline"
         @keyup.enter="onSubmit"
       >
-        <el-form-item label="标题" prop="title">
-          <el-input v-model="searchInfo.title" placeholder="标题" />
-        </el-form-item>
-
         <el-form-item label="分类" prop="categoryId">
           <el-select v-model="searchInfo.categoryId">
             <el-option
@@ -24,41 +20,54 @@
           </el-select>
         </el-form-item>
 
-        <el-form-item label="标签" prop="tagId">
-          <el-select v-model="searchInfo.tagId">
-            <el-option
-              v-for="c in tagList"
-              :label="c.label"
-              :value="c.value"
-              :key="c.id"
-            />
-          </el-select>
+        <el-form-item label="标题" prop="title">
+          <el-input v-model="searchInfo.title" placeholder="标题" />
         </el-form-item>
+
+        <el-form-item label="内容" prop="content">
+          <el-input v-model="searchInfo.content" placeholder="内容" />
+        </el-form-item>
+
+        <template v-if="showAllQuery">
+          <el-form-item label="作者" prop="author">
+            <el-input v-model="searchInfo.author" placeholder="作者" />
+          </el-form-item>
+
+          <el-form-item label="朝代" prop="dynasty">
+            <el-input v-model="searchInfo.dynasty" placeholder="朝代" />
+          </el-form-item>
+        </template>
 
         <el-form-item>
           <el-button type="primary" icon="search" @click="onSubmit"
             >查询
           </el-button>
           <el-button icon="refresh" @click="onReset">重置</el-button>
+          <el-button
+            link
+            type="primary"
+            icon="arrow-down"
+            @click="showAllQuery = true"
+            v-if="!showAllQuery"
+            >展开
+          </el-button>
+          <el-button
+            link
+            type="primary"
+            icon="arrow-up"
+            @click="showAllQuery = false"
+            v-else
+            >收起
+          </el-button>
         </el-form-item>
       </el-form>
 
-      <!-- 分类区域 -->
+      <!-- 统计区域 -->
       <div class="flex items-center gap-3 mb-5">
-        <span class="font-medium text-gray-600 shrink-0">分类</span>
+        <span class="font-medium text-gray-600 shrink-0">统计</span>
         <div class="flex flex-wrap gap-2">
           <el-tag type="info" v-for="(item, index) in catStat" :key="index">
             {{ catMap[String(item.label)] }}（{{ item.total }}）
-          </el-tag>
-        </div>
-      </div>
-
-      <!-- 标签区域 -->
-      <div class="flex items-center gap-3 mb-5">
-        <span class="font-medium text-gray-600 shrink-0">标签</span>
-        <div class="flex flex-wrap gap-2">
-          <el-tag type="info" v-for="(item, index) in tagStat" :key="index">
-            {{ tagMap[String(item.label)] }}（{{ item.total }}）
           </el-tag>
         </div>
       </div>
@@ -90,15 +99,21 @@
 
         <el-table-column align="center" label="ID" prop="id" width="55" />
 
-        <el-table-column align="center" label="封面" prop="cover">
-          <template #default="{ row }">
-            <custom-pic preview pic-type="file" :pic-src="row.cover" />
-          </template>
-        </el-table-column>
-
         <el-table-column align="center" label="标题" prop="title">
           <template #default="{ row }">
             <el-link :href="row.link" target="_blank">{{ row.title }}</el-link>
+          </template>
+        </el-table-column>
+
+        <el-table-column align="center" label="作者" prop="author">
+          <template #default="{ row }">
+            <span>{{ row.dynasty }} · {{ row.author }}</span>
+          </template>
+        </el-table-column>
+
+        <el-table-column align="center" label="内容" prop="content">
+          <template #default="{ row }">
+            <el-text truncated>{{ row.content }}</el-text>
           </template>
         </el-table-column>
 
@@ -108,17 +123,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column align="center" label="标签" prop="tagId">
-          <template #default="{ row }">
-            {{ tagMap[row.tagId] }}
-          </template>
-        </el-table-column>
-
-        <el-table-column align="center" label="发布时间" prop="postTime">
-          <template #default="scope"
-            >{{ formatDate(scope.row.postTime) }}
-          </template>
-        </el-table-column>
+        <el-table-column align="center" label="排序值" prop="sortValue" />
 
         <el-table-column align="center" label="操作" fixed="right" width="210">
           <template #default="{ row }">
@@ -134,7 +139,7 @@
               type="warning"
               link
               icon="edit"
-              @click="updateMineBlogsFunc(row)"
+              @click="updateMineSentencesFunc(row)"
             >
               编辑
             </el-button>
@@ -192,34 +197,25 @@
             placeholder="请输入标题"
           />
         </el-form-item>
+        <el-form-item label="作者" prop="author">
+          <el-input
+            v-model="formData.author"
+            :clearable="true"
+            placeholder="请输入作者"
+          />
+        </el-form-item>
+        <el-form-item label="朝代" prop="dynasty">
+          <el-input
+            v-model="formData.dynasty"
+            :clearable="true"
+            placeholder="请输入朝代"
+          />
+        </el-form-item>
         <el-form-item label="链接" prop="link">
           <el-input
             v-model="formData.link"
             :clearable="true"
             placeholder="请输入链接"
-          />
-        </el-form-item>
-        <el-form-item label="封面" prop="cover">
-          <el-input
-            v-model="formData.cover"
-            :clearable="true"
-            placeholder="请输入封面"
-          />
-        </el-form-item>
-        <el-form-item label="发布时间" prop="postTime">
-          <el-date-picker
-            v-model="formData.postTime"
-            type="datetime"
-            placeholder="请选择"
-            :clearable="false"
-          />
-        </el-form-item>
-        <el-form-item label="排序值" prop="sortValue">
-          <el-input-number
-            v-model.number="formData.sortValue"
-            :min="0"
-            :precision="0"
-            placeholder="排序值"
           />
         </el-form-item>
         <el-form-item label="分类" prop="categoryId">
@@ -232,15 +228,24 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="标签" prop="tagId">
-          <el-select v-model="formData.tagId">
-            <el-option
-              v-for="c in tagList"
-              :label="c.label"
-              :value="parseInt(c.value)"
-              :key="c.id"
-            />
-          </el-select>
+        <el-form-item label="排序值" prop="sortValue">
+          <el-input-number
+            v-model.number="formData.sortValue"
+            :min="0"
+            :precision="0"
+            placeholder="排序值"
+          />
+        </el-form-item>
+
+        <el-form-item label="内容" prop="content">
+          <el-input
+            v-model="formData.content"
+            placeholder="请输入内容"
+            type="textarea"
+            maxlength="1000"
+            show-word-limit
+            autosize
+          />
         </el-form-item>
       </el-form>
     </el-drawer>
@@ -261,23 +266,23 @@
         <el-descriptions-item label="标题">
           {{ detailForm.title }}
         </el-descriptions-item>
+        <el-descriptions-item label="作者">
+          {{ detailForm.author }}
+        </el-descriptions-item>
+        <el-descriptions-item label="朝代">
+          {{ detailForm.dynasty }}
+        </el-descriptions-item>
+        <el-descriptions-item label="内容">
+          <multiline-text :text="detailForm.content" />
+        </el-descriptions-item>
         <el-descriptions-item label="链接">
           {{ detailForm.link }}
-        </el-descriptions-item>
-        <el-descriptions-item label="封面">
-          {{ detailForm.cover }}
         </el-descriptions-item>
         <el-descriptions-item label="分类">
           {{ catMap[detailForm.categoryId] }}
         </el-descriptions-item>
-        <el-descriptions-item label="标签">
-          {{ tagMap[detailForm.tagId] }}
-        </el-descriptions-item>
         <el-descriptions-item label="排序值">
           {{ detailForm.sortValue }}
-        </el-descriptions-item>
-        <el-descriptions-item label="发布时间">
-          {{ formatDate(detailForm.postTime) }}
         </el-descriptions-item>
         <el-descriptions-item label="创建时间">
           {{ formatDate(detailForm.createdAt) }}
@@ -292,37 +297,40 @@
 
 <script setup>
   import {
-    createMineBlogs,
-    deleteMineBlogs,
-    deleteMineBlogsByIds,
-    updateMineBlogs,
-    findMineBlogs,
-    getMineBlogsList,
-    getMineBlogsStat
-  } from '@/api/mine/mine_blogs'
+    createMineSentences,
+    deleteMineSentences,
+    deleteMineSentencesByIds,
+    updateMineSentences,
+    findMineSentences,
+    getMineSentencesList,
+    getMineSentencesStat
+  } from '@/api/mine/mine_sentences'
   import { formatDate, getDictFunc } from '@/utils/format'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import { ref, reactive, onMounted } from 'vue'
   import { useAppStore } from '@/pinia'
-  import CustomPic from '@/components/customPic/index.vue'
+  import MultilineText from '@/components/MultilineText.vue'
 
   defineOptions({
-    name: 'MineBlogs'
+    name: 'MineSentences'
   })
 
   // 提交按钮loading
   const btnLoading = ref(false)
   const appStore = useAppStore()
 
+  // 控制更多查询条件显示/隐藏状态
+  const showAllQuery = ref(false)
+
   // 自动化生成的字典（可能为空）以及字段
   const formData = ref({
     title: '',
+    author: '',
+    dynasty: '',
+    content: '',
     link: '',
-    cover: '',
-    postTime: new Date(),
-    sortValue: undefined,
     categoryId: undefined,
-    tagId: undefined
+    sortValue: undefined
   })
 
   // 验证规则
@@ -332,6 +340,47 @@
         required: true,
         message: '',
         trigger: ['input', 'blur']
+      },
+      {
+        whitespace: true,
+        message: '不能只输入空格',
+        trigger: ['input', 'blur']
+      }
+    ],
+    author: [
+      {
+        required: true,
+        message: '',
+        trigger: ['input', 'blur']
+      },
+      {
+        whitespace: true,
+        message: '不能只输入空格',
+        trigger: ['input', 'blur']
+      }
+    ],
+    dynasty: [
+      {
+        required: true,
+        message: '',
+        trigger: ['input', 'blur']
+      },
+      {
+        whitespace: true,
+        message: '不能只输入空格',
+        trigger: ['input', 'blur']
+      }
+    ],
+    content: [
+      {
+        required: true,
+        message: '',
+        trigger: ['input', 'blur']
+      },
+      {
+        whitespace: true,
+        message: '不能只输入空格',
+        trigger: ['input', 'blur']
       }
     ],
     link: [
@@ -339,19 +388,10 @@
         required: true,
         message: '',
         trigger: ['input', 'blur']
-      }
-    ],
-    cover: [
+      },
       {
-        required: true,
-        message: '',
-        trigger: ['input', 'blur']
-      }
-    ],
-    sortValue: [
-      {
-        required: true,
-        message: '',
+        whitespace: true,
+        message: '不能只输入空格',
         trigger: ['input', 'blur']
       }
     ],
@@ -362,7 +402,7 @@
         trigger: ['input', 'blur']
       }
     ],
-    tagId: [
+    sortValue: [
       {
         required: true,
         message: '',
@@ -381,15 +421,19 @@
   const tableData = ref([])
   const searchInfo = ref({
     title: undefined,
-    categoryId: undefined,
-    tagId: undefined
+    author: undefined,
+    dynasty: undefined,
+    content: undefined,
+    categoryId: undefined
   })
   // 重置
   const onReset = () => {
     searchInfo.value = {
       title: undefined,
-      categoryId: undefined,
-      tagId: undefined
+      author: undefined,
+      dynasty: undefined,
+      content: undefined,
+      categoryId: undefined
     }
     getTableData()
   }
@@ -417,7 +461,7 @@
 
   // 查询
   const getTableData = async () => {
-    const table = await getMineBlogsList({
+    const table = await getMineSentencesList({
       page: page.value,
       pageSize: pageSize.value,
       ...searchInfo.value
@@ -455,7 +499,7 @@
       cancelButtonText: '取消',
       type: 'warning'
     }).then(() => {
-      deleteMineBlogsFunc(row)
+      deleteMineSentencesFunc(row)
     })
   }
 
@@ -478,7 +522,7 @@
         multipleSelection.value.map((item) => {
           ids.push(item.id)
         })
-      const res = await deleteMineBlogsByIds({ ids })
+      const res = await deleteMineSentencesByIds({ ids })
       if (res.code === 0) {
         ElMessage({
           type: 'success',
@@ -496,8 +540,8 @@
   const type = ref('')
 
   // 更新行
-  const updateMineBlogsFunc = async (row) => {
-    const res = await findMineBlogs({ id: row.id })
+  const updateMineSentencesFunc = async (row) => {
+    const res = await findMineSentences({ id: row.id })
     type.value = 'update'
     if (res.code === 0) {
       formData.value = res.data
@@ -506,8 +550,8 @@
   }
 
   // 删除行
-  const deleteMineBlogsFunc = async (row) => {
-    const res = await deleteMineBlogs({ id: row.id })
+  const deleteMineSentencesFunc = async (row) => {
+    const res = await deleteMineSentences({ id: row.id })
     if (res.code === 0) {
       ElMessage({
         type: 'success',
@@ -534,12 +578,12 @@
     dialogFormVisible.value = false
     formData.value = {
       title: '',
+      author: '',
+      dynasty: '',
+      content: '',
       link: '',
-      cover: '',
-      postTime: new Date(),
-      sortValue: undefined,
       categoryId: undefined,
-      tagId: undefined
+      sortValue: undefined
     }
   }
   // 弹窗确定
@@ -550,13 +594,13 @@
       let res
       switch (type.value) {
         case 'create':
-          res = await createMineBlogs(formData.value)
+          res = await createMineSentences(formData.value)
           break
         case 'update':
-          res = await updateMineBlogs(formData.value)
+          res = await updateMineSentences(formData.value)
           break
         default:
-          res = await createMineBlogs(formData.value)
+          res = await createMineSentences(formData.value)
           break
       }
       btnLoading.value = false
@@ -584,7 +628,7 @@
   // 打开详情
   const getDetails = async (row) => {
     // 打开弹窗
-    const res = await findMineBlogs({ id: row.id })
+    const res = await findMineSentences({ id: row.id })
     if (res.code === 0) {
       detailForm.value = res.data
       openDetailShow()
@@ -598,11 +642,11 @@
   }
 
   /********************************************************************************************************************/
-  // 博客分类
+  // 句子分类
   const catList = ref([])
   const catMap = ref({})
   const fetchCategoryList = async () => {
-    const dataList = await getDictFunc('csdn_blog_category')
+    const dataList = await getDictFunc('sentence_category')
 
     const list = []
     const map = {}
@@ -615,38 +659,17 @@
     catMap.value = map
   }
 
-  // 博客标签
-  const tagList = ref([])
-  const tagMap = ref({})
-  const fetchTagList = async () => {
-    const dataList = await getDictFunc('csdn_blog_tag')
-
-    const list = []
-    const map = {}
-    dataList.forEach(({ value, label }) => {
-      list.push({ value, label })
-      map[value] = label
-    })
-
-    tagList.value = list
-    tagMap.value = map
-  }
-
   // 分类统计
   const catStat = ref([])
-  const tagStat = ref([])
   const fetchStat = async () => {
-    const { code, data } = await getMineBlogsStat()
+    const { code, data } = await getMineSentencesStat()
     if (code === 0) {
-      const { categories, tags } = data
-      catStat.value = categories
-      tagStat.value = tags
+      catStat.value = data
     }
   }
 
   onMounted(async () => {
     await fetchCategoryList()
-    await fetchTagList()
     await fetchStat()
   })
 </script>

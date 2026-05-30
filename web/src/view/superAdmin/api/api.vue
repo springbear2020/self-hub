@@ -102,11 +102,11 @@
           </template>
         </el-table-column>
 
-        <el-table-column align="left" fixed="right" label="操作" :min-width="appStore.operateMinWith">
+        <el-table-column align="left" fixed="right" label="操作" width="180">
           <template #default="scope">
             <el-button
               icon="edit"
-              type="primary"
+              type="warning"
               link
               @click="editApiFunc(scope.row)"
             >
@@ -114,7 +114,7 @@
             </el-button>
             <el-button
               icon="delete"
-              type="primary"
+              type="danger"
               link
               @click="deleteApiFunc(scope.row)"
             >

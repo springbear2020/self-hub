@@ -12,5 +12,7 @@ var (
 	mineProjectsApi  = api.ApiGroupApp.MineApiGroup.MineProjectsApi
 	mineResourcesApi = api.ApiGroupApp.MineApiGroup.MineResourcesApi
 	mineWebsitesApi  = api.ApiGroupApp.MineApiGroup.MineWebsitesApi
+	mineArchivesApi  = api.ApiGroupApp.MineApiGroup.MineArchivesApi
+	mineSentencesApi = api.ApiGroupApp.MineApiGroup.MineSentencesApi
 	dictionaryApi    = api.ApiGroupApp.SystemApiGroup.DictionaryApi
 )

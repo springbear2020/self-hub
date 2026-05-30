@@ -37,6 +37,8 @@ func initBizRouter(routers ...*gin.RouterGroup) {
 		mineRouter.InitMineBlogsRouter(privateGroup, publicGroup)
 		mineRouter.InitMineProjectsRouter(privateGroup, publicGroup)
 		mineRouter.InitMineWebsitesRouter(privateGroup, publicGroup)
+		mineRouter.InitMineArchivesRouter(privateGroup, publicGroup)
+		mineRouter.InitMineSentencesRouter(privateGroup, publicGroup)
 	}
 	{
 		openingRouter := router.RouterGroupApp.Opening

@@ -72,7 +72,7 @@
           min-width="360"
           prop="component"
         />
-        <el-table-column align="left" fixed="right" label="操作" :min-width="appStore.operateMinWith">
+        <el-table-column align="left" fixed="right" label="操作" width="250">
           <template #default="scope">
             <el-button
               type="primary"
@@ -83,7 +83,7 @@
               添加子菜单
             </el-button>
             <el-button
-              type="primary"
+              type="warning"
               link
               icon="edit"
               @click="editMenu(scope.row.ID)"
@@ -91,7 +91,7 @@
               编辑
             </el-button>
             <el-button
-              type="primary"
+              type="danger"
               link
               icon="delete"
               @click="deleteMenu(scope.row.ID)"

@@ -45,14 +45,14 @@
             >
             <el-button
               icon="edit"
-              type="primary"
+              type="warning"
               link
               @click="editAuthority(scope.row)"
               >编辑</el-button
             >
             <el-button
               icon="delete"
-              type="primary"
+              type="danger"
               link
               @click="deleteAuth(scope.row)"
               >删除</el-button

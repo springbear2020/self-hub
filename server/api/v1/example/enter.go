@@ -6,10 +6,12 @@ type ApiGroup struct {
 	CustomerApi
 	FileUploadAndDownloadApi
 	AttachmentCategoryApi
+	DashboardApi
 }
 
 var (
 	customerService              = service.ServiceGroupApp.ExampleServiceGroup.CustomerService
 	fileUploadAndDownloadService = service.ServiceGroupApp.ExampleServiceGroup.FileUploadAndDownloadService
 	attachmentCategoryService    = service.ServiceGroupApp.ExampleServiceGroup.AttachmentCategoryService
+	dashboardService             = service.ServiceGroupApp.ExampleServiceGroup.DashboardService
 )

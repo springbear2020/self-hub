@@ -71,13 +71,13 @@ func (mineProjectsService *MineProjectsService) SearchMineProjects(uid uint, key
 		Table("mine_projects").
 		Model(&dto.MineResourcesDTO{}).
 		Where("user_id = ? AND (title LIKE ? OR name LIKE ?)", uid, "%"+keyword+"%", "%"+keyword+"%")
-	err = db.Select("id, title, name as description, link").Order("sort_value desc, start_date desc").Find(&list).Limit(5).Error
+	err = db.Select("id, title, name as description, link").Order("sort_value desc, start_date desc").Limit(searchPageSize).Find(&list).Error
 	if err != nil {
 		return
 	}
 
 	for _, item := range list {
-		item.Type = "project"
+		item.Type = searchTypeProject
 	}
 	return
 }

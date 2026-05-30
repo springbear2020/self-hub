@@ -71,13 +71,13 @@ func (mineBooksService *MineBooksService) SearchMineBooks(uid uint, keyword stri
 		Table("mine_books").
 		Model(&dto.MineResourcesDTO{}).
 		Where("user_id = ? AND title LIKE ?", uid, "%"+keyword+"%")
-	err = db.Select("id, title, author as description, link").Order("sort_value desc, first_completion desc").Find(&list).Limit(5).Error
+	err = db.Select("id, title, author as description, link").Order("sort_value desc, first_completion desc").Limit(searchPageSize).Find(&list).Error
 	if err != nil {
 		return
 	}
 
 	for _, item := range list {
-		item.Type = "book"
+		item.Type = searchTypeBook
 	}
 	return
 }

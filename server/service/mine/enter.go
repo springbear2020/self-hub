@@ -8,11 +8,25 @@ type ServiceGroup struct {
 	MineProjectsService
 	MineResourcesService
 	MineWebsitesService
+	MineArchivesService
+	MineSentencesService
 }
 
 var (
-	mineBooksService    = MineBooksService{}
-	mineBlogsService    = MineBlogsService{}
-	mineProjectsService = MineProjectsService{}
-	dictionaryService   = system.DictionaryService{}
+	mineBooksService     = MineBooksService{}
+	mineBlogsService     = MineBlogsService{}
+	mineProjectsService  = MineProjectsService{}
+	mineArchivesService  = MineArchivesService{}
+	mineSentencesService = MineSentencesService{}
+	dictionaryService    = system.DictionaryService{}
+)
+
+const (
+	searchPageSize = 5
+
+	searchTypeBlog     = "blog"
+	searchTypeBook     = "book"
+	searchTypeProject  = "project"
+	searchTypeArchive  = "archive"
+	searchTypeSentence = "sentence"
 )

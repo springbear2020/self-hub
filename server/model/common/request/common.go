@@ -27,6 +27,18 @@ func (r *PageInfo) Paginate() func(db *gorm.DB) *gorm.DB {
 	}
 }
 
+func (r *PageInfo) Check() {
+	if r.Page <= 0 {
+		r.Page = 1
+	}
+	switch {
+	case r.PageSize > 100:
+		r.PageSize = 100
+	case r.PageSize <= 0:
+		r.PageSize = 10
+	}
+}
+
 // GetById Find by id structure
 type GetById struct {
 	ID int `json:"id" form:"id"` // 主键ID

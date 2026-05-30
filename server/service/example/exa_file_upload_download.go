@@ -17,7 +17,8 @@ import (
 //@param: file model.ExaFileUploadAndDownload
 //@return: error
 
-func (e *FileUploadAndDownloadService) Upload(file example.ExaFileUploadAndDownload) error {
+func (e *FileUploadAndDownloadService) Upload(uid uint, file example.ExaFileUploadAndDownload) error {
+	file.UserId = uid
 	return global.GVA_DB.Create(&file).Error
 }
 
@@ -27,9 +28,9 @@ func (e *FileUploadAndDownloadService) Upload(file example.ExaFileUploadAndDownl
 //@param: id uint
 //@return: model.ExaFileUploadAndDownload, error
 
-func (e *FileUploadAndDownloadService) FindFile(id uint) (example.ExaFileUploadAndDownload, error) {
+func (e *FileUploadAndDownloadService) FindFile(uid uint, id uint) (example.ExaFileUploadAndDownload, error) {
 	var file example.ExaFileUploadAndDownload
-	err := global.GVA_DB.Where("id = ?", id).First(&file).Error
+	err := global.GVA_DB.Where("user_id = ? AND id = ?", uid, id).First(&file).Error
 	return file, err
 }
 
@@ -39,9 +40,9 @@ func (e *FileUploadAndDownloadService) FindFile(id uint) (example.ExaFileUploadA
 //@param: file model.ExaFileUploadAndDownload
 //@return: err error
 
-func (e *FileUploadAndDownloadService) DeleteFile(file example.ExaFileUploadAndDownload) (err error) {
+func (e *FileUploadAndDownloadService) DeleteFile(uid uint, file example.ExaFileUploadAndDownload) (err error) {
 	var fileFromDb example.ExaFileUploadAndDownload
-	fileFromDb, err = e.FindFile(file.ID)
+	fileFromDb, err = e.FindFile(uid, file.ID)
 	if err != nil {
 		return
 	}
@@ -49,14 +50,14 @@ func (e *FileUploadAndDownloadService) DeleteFile(file example.ExaFileUploadAndD
 	if err = oss.DeleteFile(fileFromDb.Key); err != nil {
 		return errors.New("文件删除失败")
 	}
-	err = global.GVA_DB.Where("id = ?", file.ID).Unscoped().Delete(&file).Error
+	err = global.GVA_DB.Where("user_id = ? AND id = ?", uid, file.ID).Unscoped().Delete(&file).Error
 	return err
 }
 
 // EditFileName 编辑文件名或者备注
-func (e *FileUploadAndDownloadService) EditFileName(file example.ExaFileUploadAndDownload) (err error) {
+func (e *FileUploadAndDownloadService) EditFileName(uid uint, file example.ExaFileUploadAndDownload) (err error) {
 	var fileFromDb example.ExaFileUploadAndDownload
-	return global.GVA_DB.Where("id = ?", file.ID).First(&fileFromDb).Update("name", file.Name).Error
+	return global.GVA_DB.Where("user_id = ? AND id = ?", uid, file.ID).First(&fileFromDb).Update("name", file.Name).Error
 }
 
 //@author: [piexlmax](https://github.com/piexlmax)
@@ -65,10 +66,10 @@ func (e *FileUploadAndDownloadService) EditFileName(file example.ExaFileUploadAn
 //@param: info request.ExaAttachmentCategorySearch
 //@return: list interface{}, total int64, err error
 
-func (e *FileUploadAndDownloadService) GetFileRecordInfoList(info request.ExaAttachmentCategorySearch) (list []example.ExaFileUploadAndDownload, total int64, err error) {
+func (e *FileUploadAndDownloadService) GetFileRecordInfoList(uid uint, info request.ExaAttachmentCategorySearch) (list []example.ExaFileUploadAndDownload, total int64, err error) {
 	limit := info.PageSize
 	offset := info.PageSize * (info.Page - 1)
-	db := global.GVA_DB.Model(&example.ExaFileUploadAndDownload{})
+	db := global.GVA_DB.Model(&example.ExaFileUploadAndDownload{}).Where("user_id = ?", uid)
 
 	if len(info.Keyword) > 0 {
 		db = db.Where("name LIKE ?", "%"+info.Keyword+"%")
@@ -92,7 +93,7 @@ func (e *FileUploadAndDownloadService) GetFileRecordInfoList(info request.ExaAtt
 //@param: header *multipart.FileHeader, noSave string
 //@return: file model.ExaFileUploadAndDownload, err error
 
-func (e *FileUploadAndDownloadService) UploadFile(header *multipart.FileHeader, noSave string, classId int) (file example.ExaFileUploadAndDownload, err error) {
+func (e *FileUploadAndDownloadService) UploadFile(uid uint, header *multipart.FileHeader, noSave string, classId int) (file example.ExaFileUploadAndDownload, err error) {
 	oss := upload.NewOss()
 	filePath, key, uploadErr := oss.UploadFile(header)
 	if uploadErr != nil {
@@ -107,7 +108,7 @@ func (e *FileUploadAndDownloadService) UploadFile(header *multipart.FileHeader, 
 		Key:     key,
 	}
 	if noSave == "0" {
-		return f, e.Upload(f)
+		return f, e.Upload(uid, f)
 	}
 	return f, nil
 }
@@ -118,6 +119,9 @@ func (e *FileUploadAndDownloadService) UploadFile(header *multipart.FileHeader, 
 //@param: file model.ExaFileUploadAndDownload
 //@return: error
 
-func (e *FileUploadAndDownloadService) ImportURL(file *[]example.ExaFileUploadAndDownload) error {
+func (e *FileUploadAndDownloadService) ImportURL(uid uint, file *[]example.ExaFileUploadAndDownload) error {
+	for i := range *file {
+		(*file)[i].UserId = uid
+	}
 	return global.GVA_DB.Create(&file).Error
 }

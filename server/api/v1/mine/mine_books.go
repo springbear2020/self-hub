@@ -96,6 +96,7 @@ func (mineBooksApi *MineBooksApi) GetMineBooksList(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
+	pageInfo.PageInfo.Check()
 
 	uid := utils.GetUserID(c)
 	list, total, err := mineBooksService.GetMineBooksInfoList(uid, pageInfo)

@@ -12,7 +12,7 @@ func bizModel() error {
 	err := db.AutoMigrate(
 		task.DailyTask{}, task.DailyTaskCompletion{},
 		miser.MiserCategory{}, miser.MiserTransaction{}, miser.MiserTransactionItem{}, miser.MiserLoanRecord{}, miser.MiserRankingRecord{},
-		mine.MineBooks{}, mine.MineBlogs{}, mine.MineProjects{}, mine.MineWebsites{},
+		mine.MineBooks{}, mine.MineBlogs{}, mine.MineProjects{}, mine.MineWebsites{}, mine.MineArchives{}, mine.MineSentences{},
 	)
 	if err != nil {
 		return err

@@ -2,6 +2,7 @@ package mine
 
 import (
 	"github.com/springbear2020/self-hub/server/global"
+	"github.com/springbear2020/self-hub/server/model/common"
 	"github.com/springbear2020/self-hub/server/model/mine"
 	"github.com/springbear2020/self-hub/server/model/mine/dto"
 	"github.com/springbear2020/self-hub/server/model/mine/request"
@@ -71,13 +72,44 @@ func (mineBlogsService *MineBlogsService) SearchMineBlogs(uid uint, keyword stri
 		Table("mine_blogs").
 		Model(&dto.MineResourcesDTO{}).
 		Where("user_id = ? AND title LIKE ?", uid, "%"+keyword+"%")
-	err = db.Select("id, title, DATE_FORMAT(post_time, '%Y-%m-%d %H:%i') as description, link").Order("sort_value desc, post_time desc").Find(&list).Limit(5).Error
+	err = db.Select("id, title, DATE_FORMAT(post_time, '%Y-%m-%d %H:%i') as description, link").Order("sort_value desc, post_time desc").Limit(searchPageSize).Find(&list).Error
 	if err != nil {
 		return
 	}
 
 	for _, item := range list {
-		item.Type = "blog"
+		item.Type = searchTypeBlog
 	}
 	return
+}
+
+func (mineBlogsService *MineBlogsService) GetMineBlogsStat(uid uint) (map[string][]*common.CountDTO, error) {
+	var categories []*common.CountDTO
+	err := global.GVA_DB.Raw(`
+	SELECT category_id AS label, COUNT(1) AS total
+	FROM mine_blogs
+	WHERE user_id = ?
+	GROUP BY label
+	ORDER BY total DESC;
+	`, uid).Find(&categories).Error
+	if err != nil {
+		return nil, err
+	}
+
+	var tags []*common.CountDTO
+	err = global.GVA_DB.Raw(`
+	SELECT tag_id AS label, COUNT(1) AS total
+	FROM mine_blogs
+	WHERE user_id = ?
+	GROUP BY label
+	ORDER BY total DESC;
+	`, uid).Find(&tags).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return map[string][]*common.CountDTO{
+		"categories": categories,
+		"tags":       tags,
+	}, nil
 }

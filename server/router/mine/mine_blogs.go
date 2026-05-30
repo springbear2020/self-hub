@@ -20,6 +20,7 @@ func (s *MineBlogsRouter) InitMineBlogsRouter(Router *gin.RouterGroup, PublicRou
 	{
 		mineBlogsRouterWithoutRecord.GET("findMineBlogs", mineBlogsApi.FindMineBlogs)
 		mineBlogsRouterWithoutRecord.GET("getMineBlogsList", mineBlogsApi.GetMineBlogsList)
+		mineBlogsRouterWithoutRecord.GET("getMineBlogsStat", mineBlogsApi.GetMineBlogsStat)
 	}
 	{
 		_ = mineBlogsRouterWithoutAuth

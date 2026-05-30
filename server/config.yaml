@@ -229,7 +229,7 @@ system:
   use-redis: false
   use-mongo: false
   use-strict-auth: false
-  open-dict-list: [ "csdn_blog_category", "csdn_blog_tag", "website_navigation_category" ]
+  open-dict-list: [ "csdn_blog_category", "csdn_blog_tag", "website_navigation_category", "sentence_category" ]
 tencent-cos:
   bucket: xxxxx-10005608
   region: ap-shanghai

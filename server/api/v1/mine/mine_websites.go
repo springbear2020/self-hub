@@ -96,6 +96,7 @@ func (mineWebsitesApi *MineWebsitesApi) GetMineWebsitesList(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
+	pageInfo.PageInfo.Check()
 
 	uid := utils.GetUserID(c)
 	list, total, err := mineWebsitesService.GetMineWebsitesInfoList(uid, pageInfo)

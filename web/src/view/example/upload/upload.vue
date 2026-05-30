@@ -107,7 +107,7 @@
                 >
                 <el-button
                     icon="delete"
-                    type="primary"
+                    type="danger"
                     link
                     @click="deleteFileFunc(scope.row)"
                 >删除

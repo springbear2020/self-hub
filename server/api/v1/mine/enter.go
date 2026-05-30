@@ -8,6 +8,8 @@ type ApiGroup struct {
 	MineProjectsApi
 	MineResourcesApi
 	MineWebsitesApi
+	MineArchivesApi
+	MineSentencesApi
 }
 
 var (
@@ -16,4 +18,6 @@ var (
 	mineProjectsService  = service.ServiceGroupApp.MineServiceGroup.MineProjectsService
 	mineResourcesService = service.ServiceGroupApp.MineServiceGroup.MineResourcesService
 	mineWebsitesService  = service.ServiceGroupApp.MineServiceGroup.MineWebsitesService
+	mineArchivesService  = service.ServiceGroupApp.MineServiceGroup.MineArchivesService
+	mineSentencesService = service.ServiceGroupApp.MineServiceGroup.MineSentencesService
 )
